@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { api, TestPlan, ReasoningResult } from '../lib/api'
+import { api, TestPlan } from '../lib/api'
 
 export function useReason(intellion_id: string) {
   return useMutation({
