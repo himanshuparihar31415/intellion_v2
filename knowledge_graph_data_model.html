@@ -1,0 +1,500 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.tab-bar { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 20px; overflow-x: auto; }
+.tab { padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+.tab.active { color: #534AB7; border-bottom-color: #534AB7; font-weight: 500; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.table-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; margin-bottom: 16px; }
+.table-header { padding: 12px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.table-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); font-family: var(--font-mono); flex: 1; }
+.table-desc { font-size: 12px; color: var(--color-text-secondary); }
+.table-badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid; }
+.schema-table { width: 100%; border-collapse: collapse; }
+.schema-table th { font-size: 11px; color: var(--color-text-tertiary); text-align: left; padding: 8px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); font-weight: 400; background: var(--color-background-secondary); }
+.schema-table td { font-size: 12px; padding: 8px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; line-height: 1.5; }
+.schema-table tr:last-child td { border-bottom: none; }
+.schema-table td:first-child { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); white-space: nowrap; }
+.schema-table td:nth-child(2) { color: #185FA5; font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
+.schema-table td:nth-child(3) { color: var(--color-text-secondary); }
+.schema-table td:nth-child(4) { color: var(--color-text-tertiary); font-size: 11px; }
+.pk { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: #EEEDFE; color: #534AB7; border: 0.5px solid #AFA9EC; margin-right: 4px; }
+.fk { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: #E6F1FB; color: #185FA5; border: 0.5px solid #85B7EB; margin-right: 4px; }
+.idx { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: #EAF3DE; color: #3B6D11; border: 0.5px solid #97C459; margin-right: 4px; }
+.table-body { display: none; }
+.table-body.open { display: block; }
+.design-note { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; margin: 0 16px 14px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.design-note strong { color: var(--color-text-primary); font-weight: 500; }
+
+.edge-section { display: flex; flex-direction: column; gap: 12px; }
+.edge-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.edge-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 0.5px solid transparent; transition: border-color 0.15s; }
+.edge-header.open { border-bottom-color: var(--color-border-tertiary); }
+.edge-type { font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid; font-family: var(--font-mono); white-space: nowrap; }
+.edge-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.edge-body { padding: 14px 16px; display: none; }
+.edge-body.open { display: block; }
+.edge-example { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); line-height: 1.7; margin-bottom: 10px; }
+.edge-note { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.edge-note strong { color: var(--color-text-primary); font-weight: 500; }
+
+.version-section { display: flex; flex-direction: column; gap: 12px; }
+.version-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+.version-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.version-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 10px; }
+.version-desc strong { color: var(--color-text-primary); font-weight: 500; }
+.code-block { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); line-height: 1.7; }
+.tension-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.tension-side { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+.tension-label { font-size: 11px; font-weight: 500; margin-bottom: 5px; }
+.tension-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+
+.query-section { display: flex; flex-direction: column; gap: 12px; }
+.query-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.query-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 0.5px solid transparent; }
+.query-header.open { border-bottom-color: var(--color-border-tertiary); }
+.query-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.query-perf { font-size: 11px; padding: 2px 8px; border-radius: 99px; }
+.query-body { padding: 14px 16px; display: none; }
+.query-body.open { display: block; }
+.query-sql { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); line-height: 1.7; margin-bottom: 10px; white-space: pre-wrap; }
+.query-explain { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.query-explain strong { color: var(--color-text-primary); font-weight: 500; }
+.index-row { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+.index-tag { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: #EAF3DE; color: #27500A; border: 0.5px solid #97C459; white-space: nowrap; font-family: var(--font-mono); }
+.index-desc { font-size: 11px; color: var(--color-text-tertiary); line-height: 1.5; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Knowledge graph data model — entities, edges, versioning, and query patterns</h2>
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab(0)">Entity schema</div>
+  <div class="tab" onclick="switchTab(1)">Edge model</div>
+  <div class="tab" onclick="switchTab(2)">Versioning</div>
+  <div class="tab" onclick="switchTab(3)">Query patterns</div>
+</div>
+
+<div class="panel active" id="tab-0" ></div>
+<div class="panel" id="tab-1"></div>
+<div class="panel" id="tab-2"></div>
+<div class="panel" id="tab-3"></div>
+</div>
+
+<script>
+const TABLES = [
+  {
+    name: 'nodes',
+    badge: 'Core', badgeColor: '#534AB7', badgeBg: '#EEEDFE', badgeBorder: '#AFA9EC',
+    desc: 'One row per piece of knowledge. The central table.',
+    note: '<strong>The semantic_embedding column is load-bearing.</strong> Node resolution during training — "does this new observation match an existing node?" — is a vector similarity search on this column, not a string match. Two observations that describe the same button in different words will match because their embeddings are close. This is what prevents the graph from accumulating hundreds of near-duplicate nodes.',
+    cols: [
+      ['id', 'uuid', 'Primary key', 'PK'],
+      ['intellion_id', 'uuid', 'Which Intellion owns this node', 'FK → intellions'],
+      ['layer', 'smallint', '1=structural 2=interaction 3=behavioral 4=rule', 'IDX'],
+      ['semantic_id', 'text', 'Stable slug e.g. btn_add_to_cart — human-readable stable key', 'IDX'],
+      ['semantic_definition', 'text', 'Plain-language "what this is / does"', ''],
+      ['semantic_embedding', 'vector(1536)', 'OpenAI embedding of semantic_definition — used for similarity matching', 'IDX (ivfflat)'],
+      ['page_path', 'text', 'URL pattern this node lives on e.g. /product/:id', 'IDX'],
+      ['confidence', 'numeric(5,2)', 'Current confidence 0–100', 'IDX'],
+      ['confidence_floor', 'numeric(5,2)', 'Minimum confidence before human review required', ''],
+      ['status', 'text', 'active | decayed | archived | conflicted', 'IDX'],
+      ['decay_schedule_days', 'smallint', 'Days after last verify before passive decay starts', ''],
+      ['verify_due_at', 'timestamptz', 'Next scheduled re-verification', 'IDX'],
+      ['created_at', 'timestamptz', 'First observation timestamp', ''],
+      ['updated_at', 'timestamptz', 'Last any-field update', 'IDX'],
+      ['last_verified_at', 'timestamptz', 'Last test execution or exploration confirmation', 'IDX'],
+    ]
+  },
+  {
+    name: 'node_sources',
+    badge: 'Lineage', badgeColor: '#0F6E56', badgeBg: '#E1F5EE', badgeBorder: '#5DCAA5',
+    desc: 'Every source that contributed to a node. One row per contribution event.',
+    note: '<strong>This table is append-only.</strong> Sources are never updated or deleted. If a human corrects a node, that\'s a new source row — the old one stays. This gives you a full audit trail: every claim about every node, who made it, when, and at what confidence. Querying this table is how you answer "why does the Intellion believe this?"',
+    cols: [
+      ['id', 'uuid', 'Primary key', 'PK'],
+      ['node_id', 'uuid', 'Node this source contributed to', 'FK → nodes, IDX'],
+      ['source_type', 'text', 'exploration | document | human | schema | test_execution | inference', 'IDX'],
+      ['source_weight', 'smallint', 'Trust weight at time of contribution (60/72/78/90/95/42)', ''],
+      ['confidence_delta', 'numeric(5,2)', 'How much this contribution changed the node confidence', ''],
+      ['session_id', 'uuid', 'Training or working session that produced this', 'FK → sessions'],
+      ['document_id', 'uuid', 'If source_type=document, which doc', 'FK → documents, nullable'],
+      ['raw_signal_hash', 'text', 'SHA256 of raw signal bundle — for audit without storing full blob', ''],
+      ['extraction_prompt_version', 'text', 'Which LLM prompt version produced this extraction', ''],
+      ['created_at', 'timestamptz', 'When this source was recorded', 'IDX'],
+    ]
+  },
+  {
+    name: 'edges',
+    badge: 'Graph', badgeColor: '#185FA5', badgeBg: '#E6F1FB', badgeBorder: '#85B7EB',
+    desc: 'Directed relationships between nodes. The graph layer.',
+    note: '<strong>Edge confidence is always ≤ min(source_confidence, target_confidence).</strong> An edge can\'t be more certain than either node it connects. This is enforced by a trigger — when either endpoint\'s confidence drops, connected edges automatically recompute. The edge_type enum is the most important design decision here: it constrains what relationships are expressible, which forces clarity in the reasoning engine.',
+    cols: [
+      ['id', 'uuid', 'Primary key', 'PK'],
+      ['source_node_id', 'uuid', 'Origin node', 'FK → nodes, IDX'],
+      ['target_node_id', 'uuid', 'Destination node', 'FK → nodes, IDX'],
+      ['edge_type', 'text', 'triggers | mutates | governs | parent_of | sibling_of | blocks | enables | references | conflicts_with | supersedes | accessible_only_if', 'IDX'],
+      ['confidence', 'numeric(5,2)', 'Auto-computed: min(source.confidence, target.confidence)', ''],
+      ['properties', 'jsonb', 'Edge-specific metadata e.g. {condition: "if role=admin"} for conditional edges', ''],
+      ['discovered_in', 'uuid', 'Session that first created this edge', 'FK → sessions'],
+      ['created_at', 'timestamptz', '', ''],
+    ]
+  },
+  {
+    name: 'conflicts',
+    badge: 'Conflicts', badgeColor: '#A32D2D', badgeBg: '#FCEBEB', badgeBorder: '#F09595',
+    desc: 'Preserved disagreements between sources. Never auto-deleted.',
+    note: '<strong>Conflicts are findings, not errors.</strong> The table is designed to be queried by humans and by the reasoning engine. The resolution_type column is set only when a human resolves — until then it stays null. Unresolved conflicts with high severity automatically surface in the reasoning alerts panel. The node_id still points to the node — the conflict is stored separately so the node can keep functioning while the conflict is pending.',
+    cols: [
+      ['id', 'uuid', 'Primary key', 'PK'],
+      ['node_id', 'uuid', 'The node where conflict was detected', 'FK → nodes, IDX'],
+      ['source_a_id', 'uuid', 'First source (usually higher trust)', 'FK → node_sources'],
+      ['source_b_id', 'uuid', 'Second source (the challenger)', 'FK → node_sources'],
+      ['source_a_claim', 'text', 'What source A says about this node', ''],
+      ['source_b_claim', 'text', 'What source B says', ''],
+      ['weight_gap', 'smallint', 'abs(source_a_weight - source_b_weight)', 'IDX'],
+      ['severity', 'text', 'critical | high | medium | low — based on node layer + weight_gap', 'IDX'],
+      ['auto_resolvable', 'boolean', 'weight_gap >= 25 AND not on critical path', ''],
+      ['resolution_type', 'text', 'winner_a | winner_b | both_wrong | intentional | null (pending)', 'IDX'],
+      ['resolved_by', 'uuid', 'Human user or system that resolved', 'nullable'],
+      ['resolved_at', 'timestamptz', '', 'nullable, IDX'],
+      ['created_at', 'timestamptz', '', 'IDX'],
+    ]
+  },
+  {
+    name: 'decay_events',
+    badge: 'Decay', badgeColor: '#854F0B', badgeBg: '#FAEEDA', badgeBorder: '#EF9F27',
+    desc: 'Log of every confidence drop with its cause. Append-only.',
+    note: '<strong>Decay events are how you debug "why is this node at 42%?"</strong> Every drop is recorded with its trigger, the magnitude, and which nodes were affected. This also powers the "confidence history" chart in the UI — you can see a node\'s confidence over time and correlate drops with specific deploys. The affected_node_ids array lets a single deploy event touch many nodes in one write rather than one row per affected node.',
+    cols: [
+      ['id', 'uuid', 'Primary key', 'PK'],
+      ['trigger_type', 'text', 'frontend_deploy | api_schema_change | document_update | time_decay | manual', 'IDX'],
+      ['trigger_reference', 'text', 'Deploy ID, doc version, or "nightly" — the external event that caused this', ''],
+      ['affected_node_ids', 'uuid[]', 'Array of node IDs that were decayed in this event', ''],
+      ['confidence_drop', 'numeric(5,2)', 'How much confidence dropped (e.g. -35.0)', ''],
+      ['recomputed_at', 'timestamptz', 'When the decay was applied', 'IDX'],
+      ['reverify_queued', 'boolean', 'Whether affected nodes were added to the frontier', ''],
+    ]
+  },
+];
+
+const EDGES = [
+  {
+    type: 'triggers', typeColor: '#534AB7', typeBg: '#EEEDFE', typeBorder: '#AFA9EC',
+    title: 'Behavioral causation — action A causes state change B',
+    example: `{ source: "btn_add_to_cart", target: "behavior:cart_badge_increment",
+  edge_type: "triggers", confidence: 87,
+  properties: { delay_ms: null, condition: null } }`,
+    note: '<strong>The most common edge type.</strong> Created whenever the LLM interpretation layer observes that an action produced an effect. The properties.condition field handles conditional triggers — "triggers only if stock > 0" — stored as a string expression, evaluated by the reasoning engine when planning assertions.'
+  },
+  {
+    type: 'governs', typeColor: '#0F6E56', typeBg: '#E1F5EE', typeBorder: '#5DCAA5',
+    title: 'Rule application — rule node R constrains interaction node I',
+    example: `{ source: "rule:admin_re_auth", target: "/admin/*",
+  edge_type: "governs", confidence: 95,
+  properties: { scope: "all_children", exception_node: "role:superadmin" } }`,
+    note: '<strong>Governs edges are what make impact analysis work.</strong> When a rule changes, the reasoning engine traverses all governs edges from that rule node to find every UI and behavioral node it constrains. The properties.exception_node field stores exceptions as a reference — not buried in text — so they\'re traversable too.'
+  },
+  {
+    type: 'conflicts_with', typeColor: '#A32D2D', typeBg: '#FCEBEB', typeBorder: '#F09595',
+    title: 'Live disagreement — two nodes hold contradictory claims',
+    example: `{ source: "rule:free_shipping_500", target: "behavior:free_shipping_fires_at_499",
+  edge_type: "conflicts_with", confidence: null,
+  properties: { conflict_id: "conf_2291", severity: "high", auto_resolvable: false } }`,
+    note: '<strong>Conflict edges have null confidence</strong> — they don\'t represent a known state, they represent an unresolved disagreement. The reasoning engine treats any path through a conflicts_with edge as unreliable. These edges are cleaned up when the conflict is resolved: the losing claim gets a supersedes edge, and the conflicts_with edge is deleted.'
+  },
+  {
+    type: 'accessible_only_if', typeColor: '#185FA5', typeBg: '#E6F1FB', typeBorder: '#85B7EB',
+    title: 'Conditional access — node B is only reachable when condition C holds',
+    example: `{ source: "/checkout/payment", target: "cart.items.length > 0",
+  edge_type: "accessible_only_if", confidence: 96,
+  properties: { condition_type: "state_check", evaluated_by: "ui_skill",
+                redirect_on_fail: "/cart" } }`,
+    note: '<strong>Conditional access edges are what make mission planning correct.</strong> Before navigating to any node, the reasoning engine checks all its accessible_only_if edges and ensures conditions are satisfied. Without this, the Playwright agent would try to navigate to /checkout/payment from a cold start and get redirected — which would look like a broken node rather than a setup requirement.'
+  },
+  {
+    type: 'supersedes', typeColor: '#854F0B', typeBg: '#FAEEDA', typeBorder: '#EF9F27',
+    title: 'Version replacement — new knowledge replaces old',
+    example: `{ source: "behavior:admin_timeout_15min",  target: "behavior:admin_timeout_30min",
+  edge_type: "supersedes", confidence: 90,
+  properties: { reason: "test_execution_confirmed", session_id: "sess_7821",
+                superseded_at: "2025-05-06T14:22Z" } }`,
+    note: '<strong>Supersedes edges preserve history without polluting active queries.</strong> The superseded node is archived (status=archived) but not deleted. Active queries filter to status=active by default. Historical queries — "what did the Intellion believe about admin timeout on May 1st?" — join through supersedes edges to reconstruct past state. This is the versioning strategy for node content.'
+  },
+];
+
+const VERSIONS = [
+  {
+    title: 'The core tension: full history vs. query performance',
+    color: '#534AB7',
+    desc: 'Full event-sourcing (store every state change as an event, reconstruct current state by replaying) gives perfect auditability but makes every read expensive. A mutable-row approach (update the node in place) makes reads fast but loses history. The knowledge graph needs both — fast reads for the reasoning engine, full history for debugging and the UI.',
+    tension: [
+      { label: '✓ Chosen: hybrid approach', color: '#0F6E56', text: 'Nodes table is mutable — stores current state only. node_sources is append-only — stores every contribution. decay_events is append-only — stores every confidence drop. supersedes edges preserve old node versions as archived rows. History reconstructed by joining these tables, not by replaying events.' },
+      { label: '✗ Rejected: full event sourcing', color: '#A32D2D', text: 'Every confidence update would be an event. Reconstructing current confidence for 1000 nodes means replaying potentially thousands of events per query. The reasoning engine runs this query on every mission start — millisecond latency required, not seconds.' },
+    ]
+  },
+  {
+    title: 'Node versioning — when semantic_definition changes',
+    color: '#0F6E56',
+    desc: 'When a node\'s meaning changes materially — not a confidence update, but the actual semantic definition — a new version is needed. The old definition was based on old behavior; the new one reflects updated behavior after a deploy.',
+    code: `-- When semantic_definition changes substantially:
+UPDATE nodes SET status = 'archived' WHERE id = :old_id;
+
+INSERT INTO nodes (id, semantic_id, semantic_definition, confidence, ...)
+VALUES (:new_uuid, :same_semantic_id, :new_definition, :reset_confidence, ...);
+
+INSERT INTO edges (source_node_id, target_node_id, edge_type, ...)
+VALUES (:new_uuid, :old_uuid, 'supersedes', ...);
+
+-- All edges from old node migrated to new node:
+UPDATE edges SET source_node_id = :new_uuid
+WHERE source_node_id = :old_uuid AND edge_type != 'supersedes';`,
+    note: 'The semantic_id stays the same across versions — it\'s the stable human-readable identifier. The uuid changes. This means external references (mission logs, conflict records) can always find the node by semantic_id even after a version change.'
+  },
+  {
+    title: 'Confidence history — querying the past',
+    color: '#185FA5',
+    desc: 'Two queries the UI needs to support: "what is this node\'s confidence right now?" (fast, hits the nodes table directly) and "show me this node\'s confidence over the last 30 days" (slower, reconstructed from node_sources + decay_events).',
+    code: `-- Current confidence (fast — single row lookup):
+SELECT confidence, status, last_verified_at
+FROM nodes WHERE id = :node_id;
+
+-- Confidence history (reconstructed from events):
+SELECT
+  date_trunc('day', event_time) as day,
+  confidence_after
+FROM (
+  SELECT created_at as event_time,
+         (SELECT confidence FROM nodes WHERE id = :node_id) +
+         SUM(confidence_delta) OVER (ORDER BY created_at DESC) as confidence_after
+  FROM node_sources WHERE node_id = :node_id
+  UNION ALL
+  SELECT recomputed_at as event_time, -confidence_drop as confidence_after
+  FROM decay_events WHERE :node_id = ANY(affected_node_ids)
+) events
+ORDER BY day;`,
+    note: 'The history query is O(n) on source + decay events for a node. For a mature node with 200 sources and 15 decay events, this is fast enough. If it becomes a bottleneck, a materialized daily_confidence_snapshots table solves it — but that\'s premature until query profiling shows it\'s needed.'
+  },
+];
+
+const QUERIES = [
+  {
+    name: 'Scope pull — reasoning engine on mission start',
+    perf: '< 50ms target', perfColor: '#27500A', perfBg: '#EAF3DE', perfBorder: '#97C459',
+    sql: `-- Pull all nodes relevant to a task scope
+-- Called once per mission, result held in working memory
+
+SELECT n.id, n.semantic_id, n.layer, n.semantic_definition,
+       n.confidence, n.status, n.page_path, n.verify_due_at,
+       array_agg(e.edge_type || ':' || e.target_node_id) as edges
+FROM nodes n
+LEFT JOIN edges e ON e.source_node_id = n.id
+WHERE n.intellion_id = :intellion_id
+  AND n.status = 'active'
+  AND (
+    n.page_path ILIKE ANY(:scope_paths)          -- structural match
+    OR n.semantic_embedding <-> :task_embedding < 0.25  -- semantic match
+    OR n.id = ANY(:entity_node_ids)              -- direct entity match
+  )
+GROUP BY n.id
+ORDER BY n.confidence DESC, n.layer ASC;`,
+    explain: '<strong>Three-way OR in the WHERE clause</strong> is intentional: structural match catches nodes we know are in scope by URL, semantic match catches nodes we might have missed (a behavioral node not linked to a specific path), direct entity match catches nodes pulled by name from the task description.',
+    indexes: [
+      ['idx_nodes_intellion_status', 'nodes(intellion_id, status) — filters active nodes per Intellion'],
+      ['idx_nodes_page_path', 'nodes(page_path text_pattern_ops) — ILIKE prefix match on URL paths'],
+      ['idx_nodes_embedding_ivfflat', 'nodes USING ivfflat(semantic_embedding vector_cosine_ops) — ANN similarity search'],
+    ]
+  },
+  {
+    name: 'Frontier priority queue — training scheduler',
+    perf: '< 20ms target', perfColor: '#27500A', perfBg: '#EAF3DE', perfBorder: '#97C459',
+    sql: `-- Top N items for next exploration cycle
+-- Runs every 30s during active training
+
+SELECT
+  f.id, f.target_description, f.target_node_id,
+  f.created_by_source,        -- doc_intent vs exploration
+  n.confidence,
+  n.layer,
+  -- Priority score (higher = explore sooner)
+  (f.gap_weight * 0.4
+   + (100 - COALESCE(n.confidence, 0)) * 0.3
+   + (CASE WHEN f.created_by_source = 'document' THEN 20 ELSE 0 END) * 0.2
+   + (EXTRACT(EPOCH FROM (NOW() - f.last_attempted_at)) / 86400 * 2) * 0.1
+  ) AS priority_score
+FROM frontier_items f
+LEFT JOIN nodes n ON n.id = f.target_node_id
+WHERE f.intellion_id = :intellion_id
+  AND f.status = 'pending'
+  AND (f.last_attempted_at IS NULL OR f.last_attempted_at < NOW() - INTERVAL '1 hour')
+ORDER BY priority_score DESC
+LIMIT 10;`,
+    explain: '<strong>The priority score is computed at query time, not stored.</strong> Storing it would require updating thousands of rows whenever weights change. Computing it in SQL means weight adjustments take effect immediately on the next scheduler run. The LIMIT 10 gives the agent its next batch — not its entire queue.',
+    indexes: [
+      ['idx_frontier_intellion_status', 'frontier_items(intellion_id, status) — pending items per Intellion'],
+      ['idx_frontier_last_attempted', 'frontier_items(last_attempted_at) — recency filter'],
+    ]
+  },
+  {
+    name: 'Impact analysis — "what breaks if this changes?"',
+    perf: '< 200ms target', perfColor: '#27500A', perfBg: '#EAF3DE', perfBorder: '#97C459',
+    sql: `-- Recursive edge traversal from a changed node
+-- Used by reasoning engine for change impact analysis
+
+WITH RECURSIVE impact(node_id, depth, path, edge_types) AS (
+  -- Seed: the changed node
+  SELECT :changed_node_id, 0,
+         ARRAY[:changed_node_id],
+         ARRAY[]::text[]
+
+  UNION ALL
+
+  -- Recurse: follow outbound edges (max 5 hops)
+  SELECT e.target_node_id, i.depth + 1,
+         i.path || e.target_node_id,
+         i.edge_types || e.edge_type
+  FROM edges e
+  JOIN impact i ON i.node_id = e.source_node_id
+  WHERE e.target_node_id != ALL(i.path)   -- no cycles
+    AND i.depth < 5
+    AND e.edge_type IN ('triggers','mutates','governs','blocks','enables')
+)
+SELECT DISTINCT n.semantic_id, n.layer, n.confidence,
+       imp.depth as hops_from_change,
+       imp.edge_types as relationship_chain
+FROM impact imp
+JOIN nodes n ON n.id = imp.node_id
+WHERE imp.depth > 0
+ORDER BY imp.depth, n.layer;`,
+    explain: '<strong>Recursive CTE with cycle detection</strong> via the path array. The edge_type filter in the recursion is critical — it only follows causal edges (triggers, mutates, governs) not structural ones (parent_of, sibling_of). This means the query returns "things that would break" not "things that are nearby."',
+    indexes: [
+      ['idx_edges_source', 'edges(source_node_id, edge_type) — outbound edge traversal'],
+      ['idx_edges_target', 'edges(target_node_id, edge_type) — inbound edge traversal (for reverse impact)'],
+    ]
+  },
+  {
+    name: 'Conflict surface — reasoning alerts panel',
+    perf: '< 30ms target', perfColor: '#27500A', perfBg: '#EAF3DE', perfBorder: '#97C459',
+    sql: `-- Unresolved conflicts for the alerts panel
+-- Sorted by actionability: auto-resolvable first, then by severity
+
+SELECT c.id, c.node_id, n.semantic_id, n.layer,
+       c.source_a_claim, c.source_b_claim,
+       c.weight_gap, c.severity, c.auto_resolvable,
+       c.created_at,
+       sa.source_type as source_a_type,
+       sb.source_type as source_b_type
+FROM conflicts c
+JOIN nodes n ON n.id = c.node_id
+JOIN node_sources sa ON sa.id = c.source_a_id
+JOIN node_sources sb ON sb.id = c.source_b_id
+WHERE c.intellion_id = :intellion_id
+  AND c.resolution_type IS NULL
+ORDER BY
+  CASE c.severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1
+                  WHEN 'medium' THEN 2 ELSE 3 END,
+  c.auto_resolvable DESC,   -- auto-resolvable float to top within tier
+  c.created_at DESC;`,
+    explain: '<strong>No pagination on this query</strong> — the conflicts panel is designed to show everything unresolved. If an Intellion has hundreds of unresolved conflicts, that\'s a signal the system needs attention, not that the UI should hide them. The ORDER BY surfaces critical + auto-resolvable first so the easiest wins are always at the top.',
+    indexes: [
+      ['idx_conflicts_intellion_resolution', 'conflicts(intellion_id, resolution_type) — unresolved per Intellion'],
+      ['idx_conflicts_severity', 'conflicts(severity, auto_resolvable) — sort support'],
+    ]
+  },
+];
+
+const tab0 = document.getElementById('tab-0');
+TABLES.forEach(t => {
+  const card = document.createElement('div');
+  card.className = 'table-card';
+  const header = document.createElement('div');
+  header.className = 'table-header';
+  header.onclick = () => { body.classList.toggle('open'); };
+  header.innerHTML = `
+    <span class="table-name">${t.name}</span>
+    <span class="table-desc">${t.desc}</span>
+    <span class="table-badge" style="color:${t.badgeColor};background:${t.badgeBg};border-color:${t.badgeBorder}">${t.badge}</span>
+  `;
+  const body = document.createElement('div');
+  body.className = 'table-body';
+  body.innerHTML = `
+    <table class="schema-table">
+      <tr><th>Column</th><th>Type</th><th>Purpose</th><th>Keys</th></tr>
+      ${t.cols.map(([col, type, purpose, keys]) => `
+        <tr>
+          <td>${col}</td>
+          <td>${type}</td>
+          <td>${purpose}</td>
+          <td>${keys.split(', ').map(k => k === 'PK' ? `<span class="pk">PK</span>` : k.startsWith('FK') ? `<span class="fk">${k}</span>` : k.includes('IDX') ? `<span class="idx">IDX</span>` : k).join(' ')}</td>
+        </tr>
+      `).join('')}
+    </table>
+    <div class="design-note" style="margin-top:12px">${t.note}</div>
+  `;
+  card.append(header, body);
+  tab0.appendChild(card);
+});
+
+const tab1 = document.getElementById('tab-1');
+EDGES.forEach(e => {
+  const card = document.createElement('div');
+  card.className = 'edge-card';
+  const header = document.createElement('div');
+  header.className = 'edge-header';
+  header.onclick = () => { header.classList.toggle('open'); body.classList.toggle('open'); };
+  header.innerHTML = `
+    <span class="edge-type" style="color:${e.typeColor};background:${e.typeBg};border-color:${e.typeBorder}">${e.type}</span>
+    <span class="edge-title">${e.title}</span>
+    <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--color-text-tertiary);font-size:14px"></i>
+  `;
+  const body = document.createElement('div');
+  body.className = 'edge-body';
+  body.innerHTML = `<div class="edge-example">${e.example}</div><div class="edge-note">${e.note}</div>`;
+  card.append(header, body);
+  tab1.appendChild(card);
+});
+
+const tab2 = document.getElementById('tab-2');
+VERSIONS.forEach(v => {
+  const card = document.createElement('div');
+  card.className = 'version-card';
+  card.innerHTML = `
+    <div class="version-title"><i class="ti ti-database" aria-hidden="true" style="color:${v.color};font-size:16px"></i>${v.title}</div>
+    <div class="version-desc">${v.desc}</div>
+    ${v.tension ? `<div class="tension-row">${v.tension.map(t => `<div class="tension-side"><div class="tension-label" style="color:${t.color}">${t.label}</div><div class="tension-text">${t.text}</div></div>`).join('')}</div>` : ''}
+    ${v.code ? `<div class="code-block">${v.code}</div>` : ''}
+    ${v.note ? `<div class="version-desc" style="margin-top:10px;margin-bottom:0">${v.note}</div>` : ''}
+  `;
+  tab2.appendChild(card);
+});
+
+const tab3 = document.getElementById('tab-3');
+QUERIES.forEach(q => {
+  const card = document.createElement('div');
+  card.className = 'query-card';
+  const header = document.createElement('div');
+  header.className = 'query-header';
+  header.onclick = () => { header.classList.toggle('open'); body.classList.toggle('open'); };
+  header.innerHTML = `
+    <span class="query-name">${q.name}</span>
+    <span class="query-perf" style="color:${q.perfColor};background:${q.perfBg};border:0.5px solid ${q.perfBorder}">${q.perf}</span>
+    <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--color-text-tertiary);font-size:14px;margin-left:6px"></i>
+  `;
+  const body = document.createElement('div');
+  body.className = 'query-body';
+  body.innerHTML = `
+    <div class="query-sql">${q.sql}</div>
+    <div class="query-explain">${q.explain}</div>
+    ${q.indexes ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">${q.indexes.map(([tag, desc]) => `<div class="index-row"><span class="index-tag">${tag}</span><span class="index-desc">${desc}</span></div>`).join('')}</div>` : ''}
+  `;
+  card.append(header, body);
+  tab3.appendChild(card);
+});
+
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t,ti) => t.classList.toggle('active', ti===i));
+  document.querySelectorAll('.panel').forEach((p,pi) => p.classList.toggle('active', pi===i));
+}
+</script>

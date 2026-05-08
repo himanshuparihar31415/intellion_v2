@@ -1,0 +1,319 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.tab-bar { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 20px; gap: 0; }
+.tab {
+  padding: 10px 16px; font-size: 13px; cursor: pointer;
+  color: var(--color-text-secondary); border-bottom: 2px solid transparent;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tab.active { color: #534AB7; border-bottom-color: #534AB7; font-weight: 500; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.channel-grid { display: flex; flex-direction: column; gap: 12px; }
+.channel-card {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background-primary);
+  overflow: hidden;
+}
+.ch-header {
+  padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; border-bottom: 0.5px solid transparent; transition: border-color 0.15s;
+}
+.ch-header.open { border-bottom-color: var(--color-border-tertiary); }
+.ch-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ch-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.ch-tag { font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid; }
+.ch-conf-init { font-size: 11px; color: var(--color-text-tertiary); }
+.ch-body { padding: 14px 16px; display: none; }
+.ch-body.open { display: block; }
+.pipeline { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.pipe-row { display: flex; align-items: flex-start; gap: 8px; }
+.pipe-arrow { color: var(--color-text-tertiary); font-size: 11px; padding-top: 3px; flex-shrink: 0; width: 14px; }
+.pipe-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; flex: 1; }
+.pipe-text strong { color: var(--color-text-primary); font-weight: 500; }
+.nuance-box {
+  background: var(--color-background-secondary); border-radius: var(--border-radius-md);
+  padding: 10px 12px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6;
+}
+.nuance-box strong { color: var(--color-text-primary); font-weight: 500; }
+
+.concurrency-section { display: flex; flex-direction: column; gap: 12px; }
+.thread-card {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background-primary);
+  padding: 14px 16px;
+}
+.thread-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.thread-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.thread-status { font-size: 11px; padding: 2px 8px; border-radius: 99px; }
+.thread-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 10px; }
+.lock-row { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+.lock-icon { font-size: 14px; flex-shrink: 0; }
+.lock-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.lock-text strong { color: var(--color-text-primary); font-weight: 500; }
+.rule-list { display: flex; flex-direction: column; gap: 6px; }
+.rule-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); background: var(--color-background-primary); }
+.rule-icon { font-size: 16px; flex-shrink: 0; }
+.rule-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; }
+.rule-text strong { color: var(--color-text-primary); font-weight: 500; }
+
+.frontier-section { display: flex; flex-direction: column; gap: 12px; }
+.queue-card {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg); overflow: hidden;
+  background: var(--color-background-primary);
+}
+.queue-header { padding: 12px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; font-weight: 500; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; }
+.queue-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.queue-item:last-child { border-bottom: none; }
+.queue-pri { font-size: 11px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.queue-target { font-size: 12px; color: var(--color-text-primary); font-family: var(--font-mono); flex: 1; }
+.queue-reason { font-size: 11px; color: var(--color-text-tertiary); }
+.score-formula {
+  background: var(--color-background-secondary); border-radius: var(--border-radius-md);
+  padding: 12px 14px; font-size: 12px; line-height: 1.7; color: var(--color-text-secondary);
+}
+.score-formula strong { color: var(--color-text-primary); font-weight: 500; }
+.score-formula code { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 3px; padding: 1px 5px; color: var(--color-text-primary); }
+.phase-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.phase-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; background: var(--color-background-primary); }
+.phase-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.phase-desc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.5; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Training space mechanics — channels, concurrency, and the frontier scheduler</h2>
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab(0)">Four channels</div>
+  <div class="tab" onclick="switchTab(1)">Concurrency model</div>
+  <div class="tab" onclick="switchTab(2)">Frontier scheduler</div>
+</div>
+
+<div class="panel active" id="tab-0">
+  <div class="channel-grid" id="channels"></div>
+</div>
+
+<div class="panel" id="tab-1">
+  <div class="concurrency-section">
+    <div class="thread-card">
+      <div class="thread-header">
+        <i class="ti ti-layout-columns" aria-hidden="true" style="color:#534AB7;font-size:16px"></i>
+        <div class="thread-title">How channels coexist without corrupting the graph</div>
+      </div>
+      <div class="thread-desc">All four channels can run simultaneously — but they write to the graph through the same node resolution layer, which serializes writes on a per-node basis. Two channels discovering the same node at the same time results in a merge, not a race condition.</div>
+      <div class="rule-list">
+        <div class="rule-item">
+          <div class="rule-icon"><i class="ti ti-lock" aria-hidden="true" style="color:#534AB7"></i></div>
+          <div class="rule-text"><strong>Node-level write locks.</strong> When any channel begins writing to a node, that node is locked for ~200ms. Other channels queue their write. The second write is always treated as a merge candidate, not an overwrite — so the slower channel still contributes its observation.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon"><i class="ti ti-git-merge" aria-hidden="true" style="color:#0F6E56"></i></div>
+          <div class="rule-text"><strong>Source hierarchy on simultaneous conflict.</strong> If Exploration and Document ingestion both write to the same node in the same lock window with conflicting values — Document wins (weight 72 > 60), Exploration's version is stored as a conflict record and surfaced for review.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon"><i class="ti ti-user-check" aria-hidden="true" style="color:#993C1D"></i></div>
+          <div class="rule-text"><strong>Human input always pauses Exploration.</strong> When a human types a direct instruction, the Exploration agent pauses its current action and finishes its pending write before the human input is processed. This prevents the human's high-confidence write from being immediately contradicted by an in-flight Playwright observation.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon"><i class="ti ti-arrows-split-2" aria-hidden="true" style="color:#185FA5"></i></div>
+          <div class="rule-text"><strong>Schema ingestion runs in isolation first.</strong> API/schema ingestion (Channel 4) runs a dry-run pass before writing — it computes what it would write, checks for conflicts with existing nodes, and only then commits. This prevents a large schema import from flooding the conflict queue.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon"><i class="ti ti-refresh" aria-hidden="true" style="color:#854F0B"></i></div>
+          <div class="rule-text"><strong>Document ingestion directs Exploration.</strong> This is the key cross-channel interaction. When Document ingestion extracts a requirement ("users must verify email before accessing premium features"), it doesn't just write a rule node — it also pushes a high-priority task onto the Exploration frontier: "verify this rule is implemented." The two channels actively collaborate.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="thread-card">
+      <div class="thread-header">
+        <i class="ti ti-chart-bar" aria-hidden="true" style="color:#185FA5;font-size:16px"></i>
+        <div class="thread-title">What a live training session looks like</div>
+      </div>
+      <div class="thread-desc">At any moment during training, this is the state of the four channels — running independently but sharing the same graph:</div>
+      <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-top:4px;">
+        ${[
+          ['#534AB7','#EEEDFE','Exploration','Navigating /checkout/payment → observing payment method options → 2 new interaction nodes queued'],
+          ['#0F6E56','#E1F5EE','Document ingestion','Processing PRD_v3.pdf p.12 → extracted rule: "3D Secure required for UK cards" → writing rule node + queuing Exploration task'],
+          ['#993C1D','#FAECE7','Human input','Idle — awaiting next instruction. Last input: "discount codes are case-insensitive" (32 min ago, confidence 95%)'],
+          ['#185FA5','#E6F1FB','Schema ingestion','Dry-run complete on openapi_v2.yaml → 4 new endpoint nodes, 1 conflict detected (POST /cart param mismatch) → pending commit'],
+        ].map(([color, bg, label, status]) => `
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);">
+            <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;margin-top:4px"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px">${label}</div>
+              <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.5">${status}</div>
+            </div>
+          </div>
+        `).join('')}
+        <div style="padding:10px 14px;font-size:11px;color:var(--color-text-tertiary)">Graph writes/min: 14 · Conflicts pending: 2 · Frontier queue: 23 items</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="tab-2">
+  <div class="frontier-section">
+    <div class="score-formula">
+      <strong>Priority score formula — every frontier item gets scored, highest runs next</strong><br><br>
+      <code>priority = (gap_weight × 0.4) + (confidence_deficit × 0.3) + (doc_intent × 0.2) + (recency_penalty × 0.1)</code><br><br>
+      <strong>gap_weight:</strong> How critical is this unknown? Auth gaps score 100, payment gaps 90, UI cosmetics 20.<br>
+      <strong>confidence_deficit:</strong> (100 − current_confidence). A node at 40% scores 60 here; one at 95% scores 5.<br>
+      <strong>doc_intent:</strong> Was this task created by Document ingestion? If a spec mentioned something unexplored, it scores higher than pure curiosity-driven exploration.<br>
+      <strong>recency_penalty:</strong> If this path was explored recently, score decreases. Avoids revisiting the same territory in a loop.
+    </div>
+
+    <div class="queue-card">
+      <div class="queue-header"><i class="ti ti-list-numbers" aria-hidden="true" style="color:#534AB7;font-size:15px"></i>Live frontier queue (top 7)</div>
+      ${[
+        ['🔴 Critical','rule:3d_secure_uk','Doc-intent: PRD p.12 — never explored. Gap in payment flow.',98],
+        ['🔴 Critical','behavior:guest_gdpr_consent','Conf 51%, seen once. Blocks UK checkout mission.',91],
+        ['🟠 High','uk_payment_methods','Complete gap. No data on UK-specific payment options.',87],
+        ['🟠 High','/admin/users — idle timeout','Human taught 30min; test observed 15min. Conflict unresolved.',79],
+        ['🟡 Medium','discount_code:edge_cases','Conf 68%. Only tested valid codes. Empty, expired, wrong-case untested.',64],
+        ['🟡 Medium','behavior:cart_max_qty','Inferred cap of 50. Never directly tested boundary.',58],
+        ['🔵 Low','/settings/notifications','Structural map 40% complete. Low priority, no doc references.',31],
+      ].map(([pri, target, reason, score]) => {
+        const priColor = pri.startsWith('🔴') ? '#FCEBEB' : pri.startsWith('🟠') ? '#FAEEDA' : pri.startsWith('🟡') ? '#EAF3DE' : '#E6F1FB';
+        const priText = pri.startsWith('🔴') ? '#A32D2D' : pri.startsWith('🟠') ? '#633806' : pri.startsWith('🟡') ? '#27500A' : '#0C447C';
+        return `<div class="queue-item">
+          <span class="queue-pri" style="background:${priColor};color:${priText};border:0.5px solid">${pri}</span>
+          <span class="queue-target">${target}</span>
+          <span class="queue-reason" style="flex:2;font-size:11px">${reason}</span>
+          <span style="font-size:12px;font-weight:500;color:var(--color-text-primary);min-width:28px;text-align:right">${score}</span>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="score-formula">
+      <strong>Two exploration phases — the scheduler shifts between them based on coverage metrics</strong>
+      <div class="phase-row">
+        <div class="phase-card">
+          <div class="phase-title">Phase 1 — Breadth (0–60% structural coverage)</div>
+          <div class="phase-desc">Frontier prioritizes undiscovered pages and primary flows. Goal: build the map. Doc-intent items run alongside but don't dominate. Human inputs always jump queue.</div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-title">Phase 2 — Depth (60%+ structural coverage)</div>
+          <div class="phase-desc">Frontier shifts to low-confidence nodes, untested edge cases, conflict resolution, and doc-intent items. Map is known — now understand what's on it. Boundary testing, error states, conditional flows.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="thread-card" style="margin-top:0">
+      <div class="thread-header">
+        <i class="ti ti-refresh" aria-hidden="true" style="color:#0F6E56;font-size:16px"></i>
+        <div class="thread-title">The loop that never stops</div>
+      </div>
+      <div class="thread-desc">Training isn't a phase that ends before working begins. Once an Intellion reaches ~60% coverage on the structural layer, it can start working. But the frontier scheduler keeps running — in parallel with missions. Every mission the Intellion executes feeds new observations back into the knowledge graph, which updates confidence scores, closes gaps, and adds new items to the frontier. Working is just training with a specific task attached.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const CHANNELS = [
+  {
+    color: '#534AB7', bg: '#EEEDFE', border: '#AFA9EC',
+    title: 'Exploration — Playwright MCP agent',
+    tag: 'Confidence base: 60', tagColor: '#534AB7', tagBg: '#EEEDFE', tagBorder: '#AFA9EC',
+    pipeline: [
+      ['Frontier scheduler assigns next target', 'Not random — the scheduler picks the highest-priority unexplored path or low-confidence node. See Tab 3.'],
+      ['Playwright navigates + acts', 'Click, fill, submit, hover, wait. Actions are chosen by an LLM sub-agent that reads the current DOM and the frontier task description.'],
+      ['Raw signals captured', 'DOM delta, network trace, visual snapshot — all three simultaneously on every action.'],
+      ['LLM interpretation layer', 'Signals → semantic meaning. "What just happened and what does it tell us?" Output: node candidates + edge candidates + conflict flags.'],
+      ['Node resolution + graph write', 'New → create. Consistent → merge + confidence boost. Contradicts existing → conflict record, confidence drop, surface to reasoning engine.'],
+      ['Frontier updated', 'Newly discovered links, forms, and states added to frontier queue. Scored and inserted at correct priority position.'],
+    ],
+    nuance: 'The agent isn\'t just a crawler with memory. After each action, it pauses and asks: "what do I now know that I didn\'t before, and what does that tell me to look at next?" The frontier is updated after every single action, not just at the end of a page visit. A form with 5 fields generates 5 frontier updates as each field is discovered.'
+  },
+  {
+    color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5',
+    title: 'Document ingestion',
+    tag: 'Confidence base: 72', tagColor: '#0F6E56', tagBg: '#E1F5EE', tagBorder: '#5DCAA5',
+    pipeline: [
+      ['Document uploaded (PRD, spec, ticket, email)', 'Accepts PDF, Markdown, HTML, Jira export, Confluence page. Format normalised to structured text.'],
+      ['Chunking + context tagging', 'Document split into ~800-token chunks. Each chunk tagged with document type (requirement, spec, policy) — affects how extracted knowledge is classified.'],
+      ['Extraction LLM pass', 'Each chunk processed: extract rules, endpoints, constraints, user stories, acceptance criteria. Output is structured JSON, not free text.'],
+      ['Graph mapping', 'Each extracted item matched against existing nodes by semantic similarity. Match found → enrich existing node. No match → create new node with doc source tag.'],
+      ['Directed exploration tasks created', 'Every rule or behavior extracted that hasn\'t been observed in the app generates a frontier task: "verify this exists and works as documented."'],
+      ['Conflict detection', 'Extracted claims checked against existing knowledge. Mismatches → conflict records with both versions preserved.'],
+    ],
+    nuance: 'Documents give the Intellion intentional knowledge — things someone decided to write down, which means they\'re considered important. But documents can be wrong, outdated, or aspirational. So document-sourced knowledge is stored at 72% confidence, not 100%. The Exploration channel exists partly to validate documents against reality. When a doc says X and the app does Y, that\'s a finding — not a knowledge update.'
+  },
+  {
+    color: '#993C1D', bg: '#FAECE7', border: '#F0997B',
+    title: 'Human teaching',
+    tag: 'Confidence base: 95', tagColor: '#993C1D', tagBg: '#FAECE7', tagBorder: '#F0997B',
+    pipeline: [
+      ['Tester or domain expert types a direct instruction', 'Free-form text. Examples: "The cart max qty is 99, not 50." / "This flow only works Mon-Fri 9-5 IST." / "Admin users bypass email verification."'],
+      ['Intent classification', 'Is this a rule, a correction, a constraint, a business fact, or an exception? Classification determines which layer the node lands in and which existing nodes it connects to.'],
+      ['Conflict check against existing knowledge', 'If existing node contradicts this input — human wins. Existing value stored as "superseded" with timestamp and original source. No silent overwrite.'],
+      ['Node written at 95% base confidence', 'Highest starting confidence of any channel. Rationale: a domain expert stated something specific and intentional. Still not 100% because humans make mistakes.'],
+      ['Exploration task optionally queued', 'If the instruction is verifiable ("max qty is 99"), a verification task is added to the frontier. If it\'s an environmental constraint ("only works Mon-Fri"), it\'s stored as a rule, not explored.'],
+    ],
+    nuance: 'Human teaching is the fastest path to high-confidence knowledge — but it\'s also the most brittle. A human might remember wrong, or describe a rule that changed last sprint. The 95% (not 100%) confidence, combined with the decay system, means human-taught knowledge eventually gets re-verified rather than trusted forever. Decay window is 30 days for human input vs 7 days for exploration — longer trust, not infinite trust.'
+  },
+  {
+    color: '#185FA5', bg: '#E6F1FB', border: '#85B7EB',
+    title: 'API & schema ingestion',
+    tag: 'Confidence base: 78', tagColor: '#185FA5', tagBg: '#E6F1FB', tagBorder: '#85B7EB',
+    pipeline: [
+      ['Schema file ingested (OpenAPI, GraphQL, DB schema)', 'Parsed into endpoint/field/type structured representation. GraphQL introspection runs live against the API if URL provided.'],
+      ['Dry-run conflict pass', 'Before writing anything, compute all intended writes and check each against existing nodes. Conflicts collected in a batch — not written yet.'],
+      ['Conflict batch reviewed', 'If conflict count < 5% of total writes: auto-proceed with conflict records. If > 5%: halt and surface to human — large schema change likely means major app update.'],
+      ['Structural + interaction nodes created', 'Each endpoint becomes a node. Fields become child nodes. HTTP methods, required params, response shapes all stored as properties.'],
+      ['Behavioral linkage pass', 'Existing UI interaction nodes matched to their backend endpoints. "btn_add_to_cart → POST /api/cart" edge created if not already known.'],
+      ['Gap identification', 'UI interaction nodes with no known backend endpoint flagged. API endpoints with no known UI surface flagged. Both added to frontier for targeted exploration.'],
+    ],
+    nuance: 'Schema ingestion gives the Intellion backend understanding that UI exploration can\'t reach — what fields are required, what types are enforced, what the server actually expects vs. what the UI exposes. The gap identification pass is particularly valuable: "this API endpoint has no known UI surface" often means a hidden admin function, a deprecated flow, or an integration point that was never tested.'
+  },
+];
+
+const container = document.getElementById('channels');
+CHANNELS.forEach((ch, i) => {
+  const card = document.createElement('div');
+  card.className = 'channel-card';
+
+  const header = document.createElement('div');
+  header.className = 'ch-header';
+  header.onclick = () => {
+    header.classList.toggle('open');
+    body.classList.toggle('open');
+  };
+  header.innerHTML = `
+    <div class="ch-dot" style="background:${ch.color}"></div>
+    <div class="ch-title">${ch.title}</div>
+    <span class="ch-tag" style="color:${ch.tagColor};background:${ch.tagBg};border-color:${ch.tagBorder}">${ch.tag}</span>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'ch-body';
+
+  const pipeline = document.createElement('div');
+  pipeline.className = 'pipeline';
+  ch.pipeline.forEach(([label, detail]) => {
+    const row = document.createElement('div');
+    row.className = 'pipe-row';
+    row.innerHTML = `<div class="pipe-arrow">→</div><div class="pipe-text"><strong>${label}</strong> — ${detail}</div>`;
+    pipeline.appendChild(row);
+  });
+
+  const nuance = document.createElement('div');
+  nuance.className = 'nuance-box';
+  nuance.innerHTML = ch.nuance;
+
+  body.append(pipeline, nuance);
+  card.append(header, body);
+  container.appendChild(card);
+});
+
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t, ti) => t.classList.toggle('active', ti === i));
+  document.querySelectorAll('.panel').forEach((p, pi) => p.classList.toggle('active', pi === i));
+}
+</script>

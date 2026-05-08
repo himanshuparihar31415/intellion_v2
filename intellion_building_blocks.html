@@ -1,0 +1,247 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.canvas { padding: 24px 0; }
+.block {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.block:hover { border-color: var(--color-border-primary); background: var(--color-background-secondary); }
+.block.active { border-color: var(--color-border-info); background: var(--color-background-info); }
+.block-header { display: flex; align-items: center; gap: 12px; }
+.block-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.block-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.block-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.detail {
+  overflow: hidden; max-height: 0; transition: max-height 0.3s ease, opacity 0.3s;
+  opacity: 0; pointer-events: none;
+}
+.detail.open { max-height: 600px; opacity: 1; pointer-events: auto; }
+.detail-inner { padding-top: 14px; border-top: 0.5px solid var(--color-border-tertiary); margin-top: 14px; }
+.layer { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+.layer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.layer-text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+.layer-text strong { color: var(--color-text-primary); font-weight: 500; }
+.pill {
+  display: inline-block; font-size: 11px; padding: 2px 8px;
+  border-radius: 99px; margin: 2px;
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-secondary);
+}
+.connector {
+  display: flex; align-items: center; justify-content: center;
+  height: 28px; gap: 6px;
+}
+.conn-line { flex: 1; height: 0.5px; background: var(--color-border-secondary); }
+.conn-label { font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+.feedback-row { display: flex; gap: 10px; margin-top: 10px; }
+.feedback-card {
+  flex: 1; border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md); padding: 10px 12px;
+  background: var(--color-background-secondary);
+}
+.feedback-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.feedback-desc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.5; }
+</style>
+
+<div class="canvas">
+  <div id="blocks"></div>
+</div>
+
+<script>
+const BLOCKS = [
+  {
+    id: 'knowledge',
+    color: '#534AB7',
+    bg: '#EEEDFE',
+    icon: 'ti-brain',
+    title: 'Knowledge core',
+    sub: 'The living memory of the application',
+    layers: [
+      { color: '#534AB7', label: 'Structural layer', desc: 'The map — pages, routes, navigation hierarchies, component trees. Stored semantically, not as a raw sitemap.' },
+      { color: '#7F77DD', label: 'Interaction layer', desc: 'What you can do on each structural node. Every button, form, dropdown — and what happens when used.' },
+      { color: '#AFA9EC', label: 'Behavioral layer', desc: 'Cause-and-effect chains, conditional branching, state dependencies. "If admin role → 5 menu items; if regular → 3."' },
+      { color: '#CECBF6', label: 'Rule layer', desc: 'Business logic, validation rules, edge case boundaries. Emerges from observation and document ingestion.' },
+    ],
+    note: 'Every piece of knowledge carries a confidence score and source tag: exploration, document, human input, or test execution.'
+  },
+  {
+    id: 'training',
+    color: '#0F6E56',
+    bg: '#E1F5EE',
+    icon: 'ti-school',
+    title: 'Training space',
+    sub: 'Four channels for building knowledge',
+    layers: [
+      { color: '#0F6E56', label: 'Guided exploration', desc: 'Playwright MCP agent navigates the live app. Raw DOM changes and network signals are interpreted by an LLM layer into semantic understanding.' },
+      { color: '#1D9E75', label: 'Document ingestion', desc: 'PRDs, specs, Jira tickets, API docs. Extracted knowledge maps onto the existing graph — or creates directed exploration intent.' },
+      { color: '#5DCAA5', label: 'Human teaching', desc: 'Direct instruction from testers or domain experts. Gets the highest initial confidence score because it\'s intentional and specific.' },
+      { color: '#9FE1CB', label: 'API & schema ingestion', desc: 'Swagger/OpenAPI, GraphQL introspection, DB schemas. Backend understanding that UI exploration alone can\'t provide.' },
+    ],
+    note: 'Output is a coverage map, not a binary. "85% structural, 60% interactions, 40% behavioral, 25% business rules."'
+  },
+  {
+    id: 'reasoning',
+    color: '#993C1D',
+    bg: '#FAECE7',
+    icon: 'ti-circuit-diode',
+    title: 'Reasoning engine',
+    sub: 'The cognitive layer between knowledge and action',
+    layers: [
+      { color: '#993C1D', label: 'Inference', desc: 'Deriving knowledge never directly observed. Hypothesizes that a new email field validates format based on all other email fields doing so.' },
+      { color: '#D85A30', label: 'Conflict detection', desc: 'Spots contradictions between sources. Spec says 255 chars, UI truncates at 100. API requires a field, UI submits without it.' },
+      { color: '#F0997B', label: 'Gap identification', desc: 'Recognises what it doesn\'t know. "Seen logged-in checkout but never guest checkout." Gaps become exploration or test-planning inputs.' },
+      { color: '#F5C4B3', label: 'Impact analysis', desc: 'Understands ripple effects. "If this API response changes format, these 3 components break, affecting these 2 user flows."' },
+    ],
+    note: 'Conflicts between sources are high-value findings — surfaced before formal testing even begins.'
+  },
+  {
+    id: 'working',
+    color: '#185FA5',
+    bg: '#E6F1FB',
+    icon: 'ti-rocket',
+    title: 'Working space',
+    sub: 'Knowledge becomes action on a task',
+    layers: [
+      { color: '#185FA5', label: 'Scope discovery', desc: 'Consults the knowledge graph to understand what the task touches. Retrieves all relevant nodes, interactions, behavioral rules.' },
+      { color: '#378ADD', label: 'Strategy generation', desc: 'Prioritized, deduplicated test plan considering likelihood to break, recent changes, and lowest-confidence areas.' },
+      { color: '#85B7EB', label: 'Skill delegation', desc: 'Hands execution to skills (UI, API, visual, etc). Skills handle mechanics; the Intellion handles judgment.' },
+      { color: '#B5D4F4', label: 'Result interpretation', desc: 'Doesn\'t just flag pass/fail. Reasons about why. Is this a rounding issue? Known behavior or deviation?' },
+    ],
+    note: 'Execution results flow back into the knowledge graph. Confirmed behaviors gain confidence. Unexpected results update the model.'
+  },
+  {
+    id: 'skills',
+    color: '#854F0B',
+    bg: '#FAEEDA',
+    icon: 'ti-tool',
+    title: 'Skill registry',
+    sub: 'Stateless, pluggable execution capabilities',
+    layers: [
+      { color: '#854F0B', label: 'UI interaction', desc: 'Playwright-based. Navigates, clicks, fills forms, observes visual state. Reports raw results, no interpretation.' },
+      { color: '#BA7517', label: 'API execution', desc: 'Direct HTTP calls. Can validate response schemas, headers, latency, error codes against the knowledge graph.' },
+      { color: '#EF9F27', label: 'Specialised skills', desc: 'Visual comparison, performance measurement, accessibility checking, test case generation, assertion evaluation.' },
+    ],
+    note: 'Skills don\'t decide what to do or interpret results. They execute and report. New skills added without changing Intellion architecture.',
+    pills: ['UI', 'API', 'Visual diff', 'A11y', 'Perf', 'Assert', 'Gen']
+  },
+  {
+    id: 'feedback',
+    color: '#3B6D11',
+    bg: '#EAF3DE',
+    icon: 'ti-refresh',
+    title: 'Feedback architecture',
+    sub: 'Three loops that compound value over time',
+    loops: [
+      { label: 'Micro loop', scope: 'Within a session', desc: 'Explore → act → observe → update working memory → adjust. The core sense-act cycle.' },
+      { label: 'Meso loop', scope: 'Across sessions', desc: 'Knowledge from one session informs the next. Regressions found today become watch-points tomorrow.' },
+      { label: 'Macro loop', scope: 'Across Intellions', desc: 'Meta-patterns transfer between agents — "APIs in this org use these error formats" — without sharing specific app knowledge.' },
+    ],
+    note: 'Training and working are concurrent, not sequential. An Intellion can test what it knows while still learning what it doesn\'t.'
+  }
+];
+
+function render() {
+  const container = document.getElementById('blocks');
+  container.innerHTML = '';
+
+  BLOCKS.forEach((b, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.marginBottom = i < BLOCKS.length - 1 ? '0' : '0';
+
+    const block = document.createElement('div');
+    block.className = 'block';
+    block.id = 'block-' + b.id;
+
+    const header = document.createElement('div');
+    header.className = 'block-header';
+
+    const icon = document.createElement('div');
+    icon.className = 'block-icon';
+    icon.style.background = b.bg;
+    icon.innerHTML = `<i class="ti ${b.icon}" style="color:${b.color};font-size:18px"></i>`;
+
+    const titleWrap = document.createElement('div');
+    titleWrap.style.flex = '1';
+    titleWrap.innerHTML = `<div class="block-title">${b.title}</div><div class="block-sub">${b.sub}</div>`;
+
+    const chevron = document.createElement('i');
+    chevron.className = 'ti ti-chevron-down';
+    chevron.style.cssText = `color:var(--color-text-tertiary);font-size:16px;transition:transform 0.2s`;
+
+    header.append(icon, titleWrap, chevron);
+
+    const detail = document.createElement('div');
+    detail.className = 'detail';
+    detail.id = 'detail-' + b.id;
+
+    let detailHTML = '<div class="detail-inner">';
+
+    if (b.layers) {
+      b.layers.forEach(l => {
+        detailHTML += `<div class="layer">
+          <div class="layer-dot" style="background:${l.color}"></div>
+          <div class="layer-text"><strong>${l.label}:</strong> ${l.desc}</div>
+        </div>`;
+      });
+    }
+
+    if (b.loops) {
+      b.loops.forEach(l => {
+        detailHTML += `<div class="layer">
+          <div class="layer-dot" style="background:${b.color}"></div>
+          <div class="layer-text"><strong>${l.label}</strong> <span style="color:var(--color-text-tertiary);font-size:11px">${l.scope}</span><br>${l.desc}</div>
+        </div>`;
+      });
+    }
+
+    if (b.pills) {
+      detailHTML += `<div style="margin:8px 0 4px">`;
+      b.pills.forEach(p => { detailHTML += `<span class="pill">${p}</span>`; });
+      detailHTML += `</div>`;
+    }
+
+    if (b.note) {
+      detailHTML += `<div style="margin-top:10px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);line-height:1.6">${b.note}</div>`;
+    }
+
+    detailHTML += '</div>';
+    detail.innerHTML = detailHTML;
+
+    block.append(header, detail);
+    block.onclick = () => toggleBlock(b.id, chevron, block);
+
+    wrapper.appendChild(block);
+
+    if (i < BLOCKS.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = 'connector';
+      conn.innerHTML = `<div class="conn-line"></div><i class="ti ti-arrow-down" style="color:var(--color-text-tertiary);font-size:12px"></i><div class="conn-line"></div>`;
+      wrapper.appendChild(conn);
+    }
+
+    container.appendChild(wrapper);
+  });
+}
+
+function toggleBlock(id, chevron, block) {
+  const detail = document.getElementById('detail-' + id);
+  const isOpen = detail.classList.contains('open');
+  detail.classList.toggle('open', !isOpen);
+  block.classList.toggle('active', !isOpen);
+  chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+render();
+</script>

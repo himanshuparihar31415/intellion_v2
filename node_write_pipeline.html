@@ -1,0 +1,226 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex; gap: 0; cursor: pointer;
+}
+.step-left {
+  display: flex; flex-direction: column; align-items: center; width: 48px; flex-shrink: 0;
+}
+.step-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 500; flex-shrink: 0;
+  border: 0.5px solid; transition: all 0.15s;
+}
+.step-line { width: 1px; flex: 1; min-height: 12px; background: var(--color-border-secondary); }
+.step-body {
+  flex: 1; padding: 0 0 20px 12px;
+}
+.step-header {
+  display: flex; align-items: center; gap: 8px; padding-top: 5px; margin-bottom: 6px;
+}
+.step-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.step-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 99px;
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-tertiary);
+}
+.step-desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+.step-detail {
+  margin-top: 10px; padding: 12px 14px;
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  font-size: 12px; color: var(--color-text-secondary); line-height: 1.65;
+  display: none;
+}
+.step-detail.open { display: block; }
+.step-detail strong { color: var(--color-text-primary); font-weight: 500; }
+.code-line {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 4px; padding: 8px 10px; margin-top: 8px; line-height: 1.7;
+}
+.resolution-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.res-card {
+  padding: 10px 12px; border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+  background: var(--color-background-primary);
+}
+.res-label { font-size: 11px; font-weight: 500; margin-bottom: 4px; }
+.res-desc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.5; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">How nodes get written during training — four stages from browser event to knowledge graph</h2>
+<div class="steps" id="steps"></div>
+</div>
+
+<script>
+const STEPS = [
+  {
+    color: '#534AB7', bg: '#EEEDFE', border: '#AFA9EC',
+    num: '1', tag: 'Playwright → Raw signals',
+    title: 'Signal capture',
+    desc: 'Every agent action generates a bundle of raw signals — not just "I clicked X" but everything that changed as a result.',
+    detail: `<strong>Three signal channels run simultaneously:</strong><br><br>
+    <strong>DOM delta</strong> — what changed in the HTML tree before and after the action. New elements, removed elements, attribute changes (disabled → enabled, class changes, text changes).<br><br>
+    <strong>Network trace</strong> — every XHR/fetch fired, with method, URL, request body, response status, and response body. This is gold — it tells you what the app actually did, not what it looks like it did.<br><br>
+    <strong>Visual snapshot</strong> — before/after screenshots. Used for detecting UI state changes that don't surface in the DOM (e.g. CSS transitions, canvas changes, iframe content).`,
+    code: `// Raw signal bundle after clicking "Add to Cart"
+{
+  action: { type: "click", selector: "#btn-add-cart", page: "/product/42" },
+  dom_delta: {
+    changed: ["#cart-badge: 0→1", "#btn-add-cart: class added 'added-state'"],
+    added: ["#toast-added-confirmation"],
+    removed: []
+  },
+  network: [
+    { method: "POST", url: "/api/cart", body: {item_id: 42, qty: 1},
+      response: { status: 200, body: { cart_id: "cx91", total_items: 1 } } }
+  ],
+  visual_diff: "badge_increment_detected"
+}`
+  },
+  {
+    color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5',
+    num: '2', tag: 'LLM interpretation layer',
+    title: 'Semantic extraction',
+    desc: 'Raw signals are passed to an LLM prompt that extracts structured meaning — what just happened, and what does it tell us about the app?',
+    detail: `The interpretation prompt gives the LLM the raw signal bundle plus the current knowledge graph context for this page. It outputs structured extractions across three categories:<br><br>
+    <strong>Node candidates</strong> — new or updated nodes implied by the observation. Each one gets a layer assignment (structural/interaction/behavioral/rule), a semantic definition, and an initial confidence score.<br><br>
+    <strong>Edge candidates</strong> — relationships implied by the observation. "This button triggers this network call which updates this UI element" becomes three nodes and two edges.<br><br>
+    <strong>Conflict flags</strong> — if anything observed contradicts what's already in the graph, the LLM flags it explicitly rather than silently overwriting.`,
+    code: `// LLM extraction output
+{
+  node_candidates: [
+    { id: "btn_add_to_cart", layer: "interaction", layer_depth: 2,
+      semantic: "POSTs item_id to /api/cart; triggers badge increment and state class change",
+      confidence_base: 62, source: "exploration" },
+    { id: "behavior:add_to_cart_side_effects", layer: "behavioral", layer_depth: 3,
+      semantic: "cart badge count increments by 1; toast confirmation appears; button enters added-state",
+      confidence_base: 58, source: "exploration" }
+  ],
+  edge_candidates: [
+    { from: "btn_add_to_cart", to: "behavior:add_to_cart_side_effects", type: "triggers" },
+    { from: "behavior:add_to_cart_side_effects", to: "cart_badge_count", type: "mutates" }
+  ],
+  conflict_flags: []
+}`
+  },
+  {
+    color: '#185FA5', bg: '#E6F1FB', border: '#85B7EB',
+    num: '3', tag: 'Graph write layer',
+    title: 'Node resolution',
+    desc: 'Before writing, the system checks: does this node already exist? If yes, merge. If no, create. The merge logic is where confidence scoring lives.',
+    detail: `<strong>Three resolution paths:</strong>`,
+    resolutions: [
+      {
+        label: '🟢 New node', labelColor: '#0F6E56',
+        desc: 'No matching node found by semantic similarity + page context. Create fresh node, set confidence to base score from source type. Add to frontier queue for future re-verification.'
+      },
+      {
+        label: '🔵 Merge + reinforce', labelColor: '#185FA5',
+        desc: 'Matching node exists and new observation is consistent. Confidence increases using: new_conf = old_conf + (1 - old_conf) × 0.3 × source_weight. Repeated observations asymptotically approach 100%.'
+      },
+      {
+        label: '🔴 Conflict detected', labelColor: '#A32D2D',
+        desc: 'Matching node exists but new observation contradicts it. Do NOT overwrite. Create a conflict record linking both observations, drop confidence by 20%, surface to reasoning engine for resolution.'
+      }
+    ]
+  },
+  {
+    color: '#854F0B', bg: '#FAEEDA', border: '#EF9F27',
+    num: '4', tag: 'Persistence',
+    title: 'Graph write + metadata',
+    desc: 'The resolved node is written with full provenance — every field stamped with source, timestamp, and the session that produced it.',
+    detail: `<strong>What gets persisted:</strong><br><br>
+    The <strong>node record</strong> itself — semantic definition, layer, confidence, decay schedule.<br><br>
+    The <strong>source log entry</strong> — session ID, timestamp, action that triggered it, raw signal bundle hash (for auditability without storing all raw data).<br><br>
+    The <strong>edges</strong> — all relationships discovered in this observation, with their own confidence scores (edge confidence = min(source_conf, target_conf)).<br><br>
+    A <strong>re-verify task</strong> queued for the frontier scheduler — this node should be re-confirmed within N days based on its layer volatility (structural = 14d, interaction = 7d, behavioral = 5d, rule = 30d).`,
+    code: `// Final persisted node
+{
+  id: "btn_add_to_cart", layer: 2, page: "/product/:id",
+  semantic: "POSTs item_id to /api/cart; triggers badge + state change",
+  confidence: 62,
+  sources: [{ type: "exploration", session: "sess_4821", ts: "2025-05-08T09:41Z" }],
+  edges: [
+    { to: "behavior:add_to_cart_side_effects", type: "triggers", conf: 58 }
+  ],
+  decay: { schedule_days: 7, trigger_events: ["frontend_deploy", "api_schema_change"] },
+  verify_due: "2025-05-15"
+}`
+  }
+];
+
+function toggleStep(i) {
+  const detail = document.getElementById('detail-' + i);
+  detail.classList.toggle('open');
+}
+
+const container = document.getElementById('steps');
+STEPS.forEach((s, i) => {
+  const step = document.createElement('div');
+  step.className = 'step';
+  step.onclick = () => toggleStep(i);
+
+  const left = document.createElement('div');
+  left.className = 'step-left';
+  const dot = document.createElement('div');
+  dot.className = 'step-dot';
+  dot.style.cssText = `background:${s.bg};color:${s.color};border-color:${s.border}`;
+  dot.textContent = s.num;
+  left.appendChild(dot);
+  if (i < STEPS.length - 1) {
+    const line = document.createElement('div');
+    line.className = 'step-line';
+    left.appendChild(line);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'step-body';
+
+  const header = document.createElement('div');
+  header.className = 'step-header';
+  header.innerHTML = `<span class="step-title">${s.title}</span><span class="step-tag">${s.tag}</span>`;
+
+  const desc = document.createElement('div');
+  desc.className = 'step-desc';
+  desc.textContent = s.desc;
+
+  const detail = document.createElement('div');
+  detail.className = 'step-detail';
+  detail.id = 'detail-' + i;
+  detail.innerHTML = s.detail;
+
+  if (s.resolutions) {
+    const row = document.createElement('div');
+    row.className = 'resolution-row';
+    s.resolutions.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'res-card';
+      card.innerHTML = `<div class="res-label" style="color:${r.labelColor}">${r.label}</div><div class="res-desc">${r.desc}</div>`;
+      row.appendChild(card);
+    });
+    row.style.gridTemplateColumns = '1fr';
+    detail.appendChild(row);
+  }
+
+  if (s.code) {
+    const code = document.createElement('div');
+    code.className = 'code-line';
+    code.textContent = s.code;
+    detail.appendChild(code);
+  }
+
+  body.append(header, desc, detail);
+  step.append(left, body);
+  container.appendChild(step);
+});
+</script>

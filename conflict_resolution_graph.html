@@ -1,0 +1,233 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.conflict-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden; margin-bottom: 12px;
+}
+.conflict-header {
+  padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  cursor: pointer;
+}
+.conflict-type {
+  font-size: 11px; padding: 3px 9px; border-radius: 99px;
+  border: 0.5px solid; white-space: nowrap;
+}
+.conflict-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.conflict-severity {
+  font-size: 11px; color: var(--color-text-tertiary);
+}
+.conflict-body { padding: 14px 16px; }
+.versus {
+  display: grid; grid-template-columns: 1fr 28px 1fr; gap: 8px; align-items: center; margin-bottom: 14px;
+}
+.source-box {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md); padding: 10px 12px;
+}
+.source-box-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+.source-box-value { font-size: 12px; color: var(--color-text-primary); line-height: 1.5; }
+.source-box-conf { font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; }
+.vs-label { text-align: center; font-size: 11px; color: var(--color-text-tertiary); font-weight: 500; }
+.resolution-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.res-btn {
+  font-size: 12px; padding: 6px 12px;
+  border-radius: var(--border-radius-md); cursor: pointer;
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary); transition: all 0.15s;
+}
+.res-btn:hover { background: var(--color-background-primary); border-color: var(--color-border-primary); }
+.res-btn.primary {
+  background: #EEEDFE; color: #534AB7; border-color: #AFA9EC;
+}
+.auto-badge {
+  font-size: 11px; padding: 2px 8px; border-radius: 99px;
+  background: #EAF3DE; color: #3B6D11; border: 0.5px solid #97C459;
+  margin-left: 6px;
+}
+.impact-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--color-border-tertiary); }
+.impact-label { font-size: 11px; color: var(--color-text-tertiary); }
+.impact-node {
+  font-size: 11px; padding: 2px 8px; border-radius: 99px;
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-secondary); font-family: var(--font-mono);
+}
+.hidden { display: none; }
+.weight-row { display: flex; gap: 8px; margin: 12px 0 4px; align-items: center; }
+.weight-label { font-size: 12px; color: var(--color-text-secondary); min-width: 130px; }
+.weight-bar-wrap { flex: 1; height: 6px; background: var(--color-border-tertiary); border-radius: 3px; overflow: hidden; }
+.weight-bar { height: 100%; border-radius: 3px; }
+.weight-val { font-size: 12px; color: var(--color-text-primary); font-weight: 500; min-width: 36px; text-align: right; }
+.section-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 10px; letter-spacing: 0.03em; }
+.auto-rule-card {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px; margin-top: 8px;
+}
+.auto-rule-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+.auto-rule-item { font-size: 12px; color: var(--color-text-secondary); line-height: 1.65; padding: 2px 0; display: flex; gap: 8px; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">How the knowledge graph handles conflicts between sources</h2>
+
+<div class="section-label">Source trust weights — how the system weighs competing claims</div>
+
+<div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:16px;">
+  <div class="weight-row">
+    <div class="weight-label">Human instruction</div>
+    <div class="weight-bar-wrap"><div class="weight-bar" style="width:95%;background:#534AB7"></div></div>
+    <div class="weight-val">95</div>
+  </div>
+  <div class="weight-row">
+    <div class="weight-label">Test execution</div>
+    <div class="weight-bar-wrap"><div class="weight-bar" style="width:90%;background:#1D9E75"></div></div>
+    <div class="weight-val">90</div>
+  </div>
+  <div class="weight-row">
+    <div class="weight-label">API schema / spec</div>
+    <div class="weight-bar-wrap"><div class="weight-bar" style="width:78%;background:#185FA5"></div></div>
+    <div class="weight-val">78</div>
+  </div>
+  <div class="weight-row">
+    <div class="weight-label">Document (PRD/ticket)</div>
+    <div class="weight-bar-wrap"><div class="weight-bar" style="width:72%;background:#854F0B"></div></div>
+    <div class="weight-val">72</div>
+  </div>
+  <div class="weight-row">
+    <div class="weight-label">Exploration (Playwright)</div>
+    <div class="weight-bar-wrap"><div class="weight-bar" style="width:60%;background:#888780"></div></div>
+    <div class="weight-val">60</div>
+  </div>
+  <div class="weight-row">
+    <div class="weight-label">Inference</div>
+    <div class="weight-bar-wrap"><div class="weight-bar" style="width:42%;background:#B4B2A9"></div></div>
+    <div class="weight-val">42</div>
+  </div>
+  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px">Higher weight = this source wins in auto-resolution. Conflicts between adjacent tiers (e.g. spec vs. doc) always escalate to human review.</div>
+</div>
+
+<div class="section-label">Live conflict examples — click headers to expand</div>
+
+<div id="conflicts"></div>
+
+<div class="auto-rule-card">
+  <div class="auto-rule-title">Auto-resolution rules</div>
+  <div class="auto-rule-item"><span style="color:#1D9E75">✓</span><span><strong>Weight gap ≥ 25:</strong> Higher-trust source wins. Lower source stored as historical note. Confidence = winner's weight × 0.9.</span></div>
+  <div class="auto-rule-item"><span style="color:#E24B4A">✗</span><span><strong>Weight gap &lt; 25:</strong> Never auto-resolve. Escalate to reasoning alerts. Both versions preserved until human decides.</span></div>
+  <div class="auto-rule-item"><span style="color:#E24B4A">✗</span><span><strong>Any conflict on critical path:</strong> Escalate regardless of weight gap. Critical paths = auth flows, payment flows, data deletion.</span></div>
+  <div class="auto-rule-item"><span style="color:#BA7517">~</span><span><strong>Spec vs. observed behavior:</strong> Always treat as a potential bug, not a knowledge conflict. Route to findings queue, not resolution queue.</span></div>
+</div>
+</div>
+
+<script>
+const CONFLICTS = [
+  {
+    type: 'Spec vs. reality', typeColor: '#A32D2D', typeBg: '#FCEBEB', typeBorder: '#F09595',
+    title: 'Field character limit — API spec says 255, UI truncates at 100',
+    severity: '🔴 High — potential data loss',
+    sourceA: { label: 'API spec (OpenAPI)', icon: 'ti-file-code', value: 'username field: maxLength: 255', conf: 78 },
+    sourceB: { label: 'Playwright exploration', icon: 'ti-player-play', value: 'Input accepted 100 chars, silently truncated at 101st keystroke', conf: 60 },
+    weightGap: 18,
+    resolution: 'escalate',
+    actions: ['Flag as bug ↗', 'Both are wrong — add note', 'Mark for manual test'],
+    primary: 0,
+    impact: ['btn_register', 'form_username_input', 'api:POST /users'],
+    note: 'Weight gap = 18 (< 25) → auto-resolution blocked. Also touches auth flow → critical path escalation regardless.'
+  },
+  {
+    type: 'Document vs. exploration', typeColor: '#854F0B', typeBg: '#FAEEDA', typeBorder: '#EF9F27',
+    title: 'Free shipping threshold — PRD says ₹500, UI fires at ₹499',
+    severity: '🟡 Medium — business logic deviation',
+    sourceA: { label: 'PRD v2 (document)', icon: 'ti-file-text', value: '"Free shipping applies when cart total ≥ ₹500"', conf: 72 },
+    sourceB: { label: 'Playwright exploration', icon: 'ti-player-play', value: 'Free shipping badge appeared when cart total = ₹499. Tested 3×, consistent.', conf: 60 },
+    weightGap: 12,
+    resolution: 'escalate',
+    actions: ['Flag as bug ↗', 'PRD is outdated — update rule', 'Add to watch list'],
+    primary: 0,
+    impact: ['cart_total_display', 'behavior:free_shipping', 'rule:shipping_policy'],
+    note: 'Weight gap = 12 → escalate. Stored as: "observed threshold = 499, documented threshold = 500, delta = -1." Both preserved.'
+  },
+  {
+    type: 'Inference vs. observation', typeColor: '#185FA5', typeBg: '#E6F1FB', typeBorder: '#85B7EB',
+    title: 'Admin re-auth — inferred 30min timeout, observed 15min',
+    severity: '🟡 Medium — security boundary',
+    sourceA: { label: 'Inference (pattern match)', icon: 'ti-brain', value: 'Hypothesized 30min idle timeout based on /admin/billing behavior', conf: 42 },
+    sourceB: { label: 'Test execution', icon: 'ti-circle-check', value: 'Session expired and re-auth prompt appeared at exactly 15min idle on /admin/users', conf: 90 },
+    weightGap: 48,
+    resolution: 'auto',
+    actions: ['Auto-resolved: test execution wins ↗'],
+    primary: 0,
+    impact: ['rule:admin_re_auth', '/admin/*'],
+    note: 'Weight gap = 48 (≥ 25) → auto-resolved. Inference replaced by test-confirmed value. Old inference stored as "superseded" with timestamp.'
+  }
+];
+
+const container = document.getElementById('conflicts');
+CONFLICTS.forEach((c, i) => {
+  const card = document.createElement('div');
+  card.className = 'conflict-card';
+
+  const header = document.createElement('div');
+  header.className = 'conflict-header';
+  header.onclick = () => { body.classList.toggle('hidden'); };
+  header.innerHTML = `
+    <span class="conflict-type" style="color:${c.typeColor};background:${c.typeBg};border-color:${c.typeBorder}">${c.type}</span>
+    <span class="conflict-title">${c.title}</span>
+    <span class="conflict-severity">${c.severity}</span>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'conflict-body hidden';
+
+  const versus = document.createElement('div');
+  versus.className = 'versus';
+  versus.innerHTML = `
+    <div class="source-box">
+      <div class="source-box-label"><i class="ti ${c.sourceA.icon}" aria-hidden="true" style="font-size:13px"></i>${c.sourceA.label}</div>
+      <div class="source-box-value">${c.sourceA.value}</div>
+      <div class="source-box-conf">Trust weight: ${c.sourceA.conf}</div>
+    </div>
+    <div class="vs-label">vs</div>
+    <div class="source-box">
+      <div class="source-box-label"><i class="ti ${c.sourceB.icon}" aria-hidden="true" style="font-size:13px"></i>${c.sourceB.label}</div>
+      <div class="source-box-value">${c.sourceB.value}</div>
+      <div class="source-box-conf">Trust weight: ${c.sourceB.conf}</div>
+    </div>
+  `;
+
+  const noteEl = document.createElement('div');
+  noteEl.style.cssText = 'font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 12px;margin-bottom:12px;';
+  noteEl.textContent = c.note;
+
+  const actionsEl = document.createElement('div');
+  actionsEl.className = 'resolution-options';
+  c.actions.forEach((a, ai) => {
+    const btn = document.createElement('button');
+    btn.className = 'res-btn' + (ai === c.primary ? ' primary' : '');
+    btn.textContent = a;
+    actionsEl.appendChild(btn);
+  });
+  if (c.resolution === 'auto') {
+    const badge = document.createElement('span');
+    badge.className = 'auto-badge';
+    badge.textContent = 'auto-resolved';
+    actionsEl.appendChild(badge);
+  }
+
+  const impactRow = document.createElement('div');
+  impactRow.className = 'impact-row';
+  impactRow.innerHTML = `<span class="impact-label">Affected nodes:</span>` +
+    c.impact.map(n => `<span class="impact-node">${n}</span>`).join('');
+
+  body.append(versus, noteEl, actionsEl, impactRow);
+  card.append(header, body);
+  container.appendChild(card);
+});
+</script>

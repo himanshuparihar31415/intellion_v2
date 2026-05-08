@@ -1,0 +1,240 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0 8px; font-family: var(--font-sans); }
+.node-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+.node-header {
+  padding: 14px 18px;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  display: flex; align-items: center; gap: 10px;
+}
+.node-type-badge {
+  font-size: 11px; padding: 3px 9px; border-radius: 99px;
+  background: #EEEDFE; color: #534AB7;
+  border: 0.5px solid #AFA9EC; white-space: nowrap;
+}
+.node-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.node-id { font-size: 12px; color: var(--color-text-tertiary); font-family: var(--font-mono); margin-left: auto; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; }
+.field {
+  padding: 12px 18px;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  border-right: 0.5px solid var(--color-border-tertiary);
+  cursor: pointer; transition: background 0.1s;
+}
+.field:hover { background: var(--color-background-secondary); }
+.field:nth-child(even) { border-right: none; }
+.field:nth-last-child(-n+2) { border-bottom: none; }
+.field-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 5px; letter-spacing: 0.03em; }
+.field-value { font-size: 13px; color: var(--color-text-primary); line-height: 1.5; }
+.conf-bar { height: 4px; border-radius: 2px; background: var(--color-border-tertiary); margin-top: 6px; overflow: hidden; }
+.conf-fill { height: 100%; border-radius: 2px; background: #1D9E75; transition: width 0.4s; }
+.source-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; padding: 3px 8px; border-radius: 99px;
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary); margin: 2px;
+}
+.source-pill i { font-size: 12px; }
+.detail-panel {
+  background: var(--color-background-secondary);
+  border-top: 0.5px solid var(--color-border-tertiary);
+  padding: 14px 18px;
+  font-size: 13px; color: var(--color-text-secondary); line-height: 1.65;
+  min-height: 56px;
+}
+.detail-panel strong { color: var(--color-text-primary); font-weight: 500; }
+.selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.sel-btn {
+  font-size: 12px; padding: 5px 12px;
+  border-radius: 99px; cursor: pointer;
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary); transition: all 0.15s;
+}
+.sel-btn.active {
+  background: #EEEDFE; color: #534AB7;
+  border-color: #AFA9EC;
+}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Knowledge node anatomy — interactive exploration of how the Intellion stores a single piece of knowledge</h2>
+
+<div class="selector" id="selector"></div>
+
+<div class="node-card">
+  <div class="node-header">
+    <span class="node-type-badge" id="hdr-layer">Interaction</span>
+    <span class="node-name" id="hdr-name">btn_add_to_cart</span>
+    <span class="node-id" id="hdr-id">#node-4821</span>
+  </div>
+  <div class="fields">
+    <div class="field" onclick="showDetail('semantic')">
+      <div class="field-label">Semantic definition</div>
+      <div class="field-value" id="f-semantic" style="font-size:12px"></div>
+    </div>
+    <div class="field" onclick="showDetail('confidence')">
+      <div class="field-label">Confidence</div>
+      <div class="field-value" id="f-conf-label"></div>
+      <div class="conf-bar"><div class="conf-fill" id="f-conf-bar"></div></div>
+    </div>
+    <div class="field" onclick="showDetail('source')">
+      <div class="field-label">Source lineage</div>
+      <div class="field-value" id="f-source"></div>
+    </div>
+    <div class="field" onclick="showDetail('decay')">
+      <div class="field-label">Decay status</div>
+      <div class="field-value" id="f-decay"></div>
+    </div>
+    <div class="field" onclick="showDetail('edges')" style="grid-column: 1 / -1; border-right: none;">
+      <div class="field-label">Graph edges</div>
+      <div class="field-value" id="f-edges" style="font-size:12px;color:var(--color-text-secondary)"></div>
+    </div>
+  </div>
+  <div class="detail-panel" id="detail-panel">Click any field to understand what it stores and why it matters.</div>
+</div>
+</div>
+
+<script>
+const EXAMPLES = [
+  {
+    label: 'Interaction node',
+    layer: 'Interaction layer',
+    name: 'btn_add_to_cart',
+    id: '#node-4821',
+    semantic: 'Initiates cart mutation — POSTs item_id to /api/cart, increments cart badge, changes button state to "Added".',
+    conf: 87,
+    confLabel: '87% — observed 3×, doc-confirmed',
+    sources: [
+      { icon: 'ti-player-play', label: 'Exploration' },
+      { icon: 'ti-file-text', label: 'PRD v2' },
+    ],
+    decay: '🟢 Fresh — re-verified 2 days ago. Frontend deploy detected; scheduled re-check in 5 days.',
+    edges: 'parent → /product/:id (structural) | triggers → cart_badge_count (behavioral) | governed_by → rule:stock_check (rule) | sibling → btn_add_to_wishlist',
+    details: {
+      semantic: '<strong>Semantic definition</strong> is the "what this does" in plain language — not the HTML label, but the functional meaning. The Intellion stores the network call, the side effects, and the state change together, so it understands the button as a behavior, not a click target.',
+      confidence: '<strong>Confidence</strong> starts at a base score set by the source type (human input = 95, document = 75, exploration = 60) and moves up with repeated confirmation. This node was seen in 3 Playwright sessions and cross-checked against the PRD — so it rose to 87%.',
+      source: '<strong>Source lineage</strong> tracks every origin that contributed to this node. If the PRD says one thing and observed behavior says another, the conflict is surfaced because both sources are recorded. You can always trace a piece of knowledge back to its evidence.',
+      decay: '<strong>Decay</strong> is triggered by external events — a frontend deploy, an API schema change, a new document version. When decay fires, confidence drops and the node is queued for re-verification. "Fresh" means no decay trigger has fired since the last check.',
+      edges: '<strong>Graph edges</strong> are what make this a knowledge graph, not a list. This node knows its parent page, which behavioral state it triggers, which business rule governs it, and its siblings. Impact analysis works by traversing these edges when something changes upstream.',
+    }
+  },
+  {
+    label: 'Behavioral node',
+    layer: 'Behavioral layer',
+    name: 'cart_free_shipping_rule',
+    id: '#node-2203',
+    semantic: 'If cart subtotal ≥ ₹500, free_shipping flag = true and shipping line item = ₹0. Recalculates on every cart mutation.',
+    conf: 71,
+    confLabel: '71% — observed 2×, spec-inferred',
+    sources: [
+      { icon: 'ti-player-play', label: 'Exploration' },
+      { icon: 'ti-brain', label: 'Inferred' },
+    ],
+    decay: '🟡 Stale — pricing spec updated 6 days ago. Confidence auto-dropped from 85% → 71%. Re-exploration queued.',
+    edges: 'triggered_by → btn_add_to_cart | affects → cart_total_display | documented_in → pricing_spec_v3 | conflicts_with → observed:₹499_threshold',
+    details: {
+      semantic: '<strong>Behavioral nodes</strong> store cause-and-effect chains — not what a button does, but what state change cascades out from it. The ₹500 threshold, the flag name, and the cart recalculation timing are all part of the definition. This is the layer that can\'t be crawled — it emerges from repeated observation.',
+      confidence: 'This node was only observed twice, and the ₹500 threshold was inferred from the spec rather than directly tested at exactly ₹499 vs ₹500. So confidence is moderate. The Intellion knows it should prioritize testing this boundary case.',
+      source: '"Inferred" is a source type — it means the Intellion derived this knowledge from pattern-matching across other observations, not from seeing it directly. Inferred nodes always have lower starting confidence and are marked for targeted exploration.',
+      decay: 'The pricing spec was updated — which touches this node\'s parent document. The Intellion auto-decreased confidence and queued a re-check. This is decay working correctly: spec changes cascade into knowledge staleness.',
+      edges: 'Note the <strong>conflicts_with</strong> edge — the spec says ₹500 but exploration observed the threshold firing at ₹499. That conflict is a live finding, stored as a graph relationship rather than buried in a log.',
+    }
+  },
+  {
+    label: 'Rule node',
+    layer: 'Rule layer',
+    name: 'rule:admin_re_auth',
+    id: '#node-0087',
+    semantic: 'Accessing /admin/* after >30min session idle requires password re-entry. Applies regardless of remember-me cookie.',
+    conf: 95,
+    confLabel: '95% — human-taught, test-confirmed',
+    sources: [
+      { icon: 'ti-user', label: 'Human input' },
+      { icon: 'ti-circle-check', label: 'Test exec' },
+    ],
+    decay: '🟢 Fresh — no auth service deploys in 14 days. Human source locks decay threshold at 30 days.',
+    edges: 'governs → /admin/* (structural) | exception: → role:superadmin | referenced_in → security_policy_v2 | tested_by → mission:403',
+    details: {
+      semantic: '<strong>Rule nodes</strong> capture constraints that aren\'t visible in the UI — business logic, security policies, edge case boundaries. A tester typed this rule directly ("after 30 min idle, re-auth required") and it became a node immediately with 95% confidence.',
+      confidence: 'Human-taught knowledge starts at 95% because it\'s intentional and specific — a domain expert stated it explicitly. Test execution then confirmed it, so it stayed at 95%. The only way this drops is if a test contradicts it.',
+      source: 'Human input is the highest-trust source. The Intellion records who taught it and when, so if the rule changes, the same person can be prompted to update it. Test execution as a second source means the rule has been operationally verified, not just stated.',
+      decay: 'Human-sourced nodes have a longer decay window — 30 days by default instead of 7. The assumption is that a person stated something deliberate and specific, so it\'s less likely to become stale from a routine deploy. Auth service deploys would still trigger an immediate re-check.',
+      edges: 'The <strong>exception edge</strong> is important — superadmin role bypasses this rule. The graph stores exceptions as explicit edges, not buried in the rule text. That means impact analysis can trace: "if superadmin role changes, this exception may change too."',
+    }
+  },
+  {
+    label: 'Structural node',
+    layer: 'Structural layer',
+    name: '/checkout/payment',
+    id: '#node-0312',
+    semantic: 'Step 3 of 4 in checkout flow. Contains: payment method selector, card form (conditional), UPI QR (conditional), place order CTA.',
+    conf: 98,
+    confLabel: '98% — crawled 7×, stable',
+    sources: [
+      { icon: 'ti-player-play', label: 'Exploration' },
+      { icon: 'ti-player-play', label: 'Regression' },
+    ],
+    decay: '🟢 Very fresh — verified in last regression run 4 hrs ago. No route changes in deploy.',
+    edges: 'parent → /checkout (flow) | prev → /checkout/address | next → /checkout/review | children → [payment_selector, card_form, upi_qr, btn_place_order] | accessible_only_if → cart.items.length > 0',
+    details: {
+      semantic: '<strong>Structural nodes</strong> are the skeleton — pages, routes, and components. The semantic definition includes what\'s conditionally rendered (card form only if card is selected, UPI QR only if UPI), not just what\'s always visible. This makes the node useful for test planning.',
+      confidence: 'Structural knowledge is the most stable and easiest to verify — just navigate there and check. Seven successful crawls with no variation gives 98%. The remaining 2% accounts for conditions the Intellion hasn\'t tested (e.g., the page when cart is empty).',
+      source: 'Both sources here are Playwright-based. The first is from training exploration, the second from a regression mission that happened to traverse this route. Every working session that touches a node is a passive confidence update.',
+      decay: 'A frontend deploy would drop this to ~65% immediately and queue re-crawl. Route changes in the deploy manifest trigger instant decay. Since the last deploy didn\'t touch /checkout/*, confidence stayed at 98%.',
+      edges: 'The <strong>accessible_only_if</strong> edge is a conditional access rule stored as a graph relationship. When planning tests for this page, the Intellion knows it must first ensure cart.items.length > 0 — it won\'t attempt to navigate here from a cold start.',
+    }
+  }
+];
+
+let activeExample = 0;
+let activeDetail = null;
+
+function renderSelector() {
+  const sel = document.getElementById('selector');
+  sel.innerHTML = '';
+  EXAMPLES.forEach((ex, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'sel-btn' + (i === activeExample ? ' active' : '');
+    btn.textContent = ex.label;
+    btn.onclick = () => { activeExample = i; activeDetail = null; render(); };
+    sel.appendChild(btn);
+  });
+}
+
+function showDetail(field) {
+  activeDetail = field;
+  const ex = EXAMPLES[activeExample];
+  document.getElementById('detail-panel').innerHTML = ex.details[field];
+}
+
+function render() {
+  const ex = EXAMPLES[activeExample];
+  renderSelector();
+  document.getElementById('hdr-layer').textContent = ex.layer;
+  document.getElementById('hdr-name').textContent = ex.name;
+  document.getElementById('hdr-id').textContent = ex.id;
+  document.getElementById('f-semantic').textContent = ex.semantic;
+  document.getElementById('f-conf-label').textContent = ex.confLabel;
+  document.getElementById('f-conf-bar').style.width = ex.conf + '%';
+  document.getElementById('f-conf-bar').style.background = ex.conf >= 90 ? '#1D9E75' : ex.conf >= 70 ? '#BA7517' : '#E24B4A';
+  const srcEl = document.getElementById('f-source');
+  srcEl.innerHTML = ex.sources.map(s => `<span class="source-pill"><i class="ti ${s.icon}" aria-hidden="true"></i>${s.label}</span>`).join('');
+  document.getElementById('f-decay').textContent = ex.decay;
+  document.getElementById('f-edges').textContent = ex.edges;
+  if (activeDetail) {
+    showDetail(activeDetail);
+  } else {
+    document.getElementById('detail-panel').textContent = 'Click any field to understand what it stores and why it matters.';
+  }
+}
+
+render();
+</script>

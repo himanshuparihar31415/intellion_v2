@@ -1,0 +1,243 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.stepper-nav { display: flex; gap: 0; margin-bottom: 20px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.snav-btn {
+  flex: 1; padding: 10px 6px; text-align: center; cursor: pointer;
+  font-size: 12px; color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border-right: 0.5px solid var(--color-border-tertiary);
+  transition: all 0.15s; line-height: 1.4;
+}
+.snav-btn:last-child { border-right: none; }
+.snav-btn.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; }
+.snav-step-num { font-size: 10px; color: var(--color-text-tertiary); display: block; }
+.panel { display: none; }
+.panel.active { display: block; }
+.task-input {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px; font-size: 13px;
+  color: var(--color-text-primary); line-height: 1.5; margin-bottom: 16px;
+  font-family: var(--font-mono);
+}
+.graph-walk {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.walk-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-primary);
+}
+.walk-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.walk-content { flex: 1; }
+.walk-label { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.walk-detail { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; }
+.node-chip {
+  display: inline-block; font-size: 11px; padding: 1px 7px;
+  border-radius: 99px; margin: 2px;
+  font-family: var(--font-mono);
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-secondary);
+}
+.node-chip.warn { background: #FAEEDA; border-color: #EF9F27; color: #633806; }
+.node-chip.ok { background: #EAF3DE; border-color: #97C459; color: #27500A; }
+.node-chip.gap { background: #FCEBEB; border-color: #F09595; color: #791F1F; }
+.plan-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+.plan-item:last-child { border-bottom: none; }
+.plan-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #EEEDFE; color: #534AB7;
+  font-size: 11px; font-weight: 500; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.plan-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; flex: 1; }
+.plan-text strong { color: var(--color-text-primary); font-weight: 500; }
+.plan-conf { font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; }
+.hypo-card {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md); padding: 10px 14px; margin-bottom: 8px;
+  background: var(--color-background-primary);
+}
+.hypo-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 4px; }
+.hypo-text { font-size: 12px; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 6px; }
+.hypo-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.hypo-pill {
+  font-size: 11px; padding: 2px 8px; border-radius: 99px;
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+}
+.skip-card {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md); padding: 10px 14px; margin-bottom: 8px;
+  font-size: 12px; color: var(--color-text-secondary); line-height: 1.55;
+}
+.skip-card strong { color: var(--color-text-primary); font-weight: 500; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">How the reasoning engine traverses the knowledge graph to build a mission plan</h2>
+
+<div class="task-input">"Validate the checkout flow for guest users in the UK region"</div>
+
+<div class="stepper-nav" id="snav"></div>
+<div id="panels"></div>
+</div>
+
+<script>
+const STEPS = [
+  {
+    label: 'Scope\nresolution',
+    content: () => `
+      <div class="graph-walk">
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-search" aria-hidden="true" style="color:#534AB7"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">Step 1 — Semantic parse of task</div>
+            <div class="walk-detail">Extract entities: <span class="node-chip ok">checkout flow</span> <span class="node-chip ok">guest user</span> <span class="node-chip warn">UK region</span>. Identify intent: validation. The "UK region" flag is unusual — check if the graph has region-specific behavioral nodes.</div>
+          </div>
+        </div>
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-git-branch" aria-hidden="true" style="color:#185FA5"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">Step 2 — Structural traversal from entry point</div>
+            <div class="walk-detail">Walk from <span class="node-chip ok">/checkout</span> → <span class="node-chip ok">/checkout/address</span> → <span class="node-chip ok">/checkout/payment</span> → <span class="node-chip ok">/checkout/review</span> → <span class="node-chip ok">/checkout/success</span>. 5 structural nodes retrieved. All confidence ≥ 90%.</div>
+          </div>
+        </div>
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-filter" aria-hidden="true" style="color:#0F6E56"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">Step 3 — Guest-user filter applied</div>
+            <div class="walk-detail">Interaction nodes tagged <span class="node-chip">session:guest</span>: <span class="node-chip ok">guest_email_capture</span> <span class="node-chip ok">no_account_btn</span> <span class="node-chip warn">guest_gdpr_consent</span>. Note: <span class="node-chip warn">guest_gdpr_consent</span> has confidence 51% — seen once, not re-verified.</div>
+          </div>
+        </div>
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-world" aria-hidden="true" style="color:#854F0B"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">Step 4 — Region filter: UK</div>
+            <div class="walk-detail">Behavioral nodes with <span class="node-chip">region:UK</span> tag: <span class="node-chip ok">currency:GBP</span>, <span class="node-chip ok">vat_display</span>, <span class="node-chip gap">uk_payment_methods</span>. Gap: <span class="node-chip gap">uk_payment_methods</span> does not exist in graph — UK-specific payment options never explored.</div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    label: 'Gap &\nconflict scan',
+    content: () => `
+      <div class="graph-walk">
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-alert-triangle" aria-hidden="true" style="color:#BA7517"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">Knowledge gaps identified</div>
+            <div class="walk-detail">
+              <div style="margin-bottom:6px"><span class="node-chip gap">uk_payment_methods</span> — node missing entirely. Debit-only cards, no Amex? No data.</div>
+              <div style="margin-bottom:6px"><span class="node-chip warn">guest_gdpr_consent</span> — confidence 51%, only 1 observation. Does the consent modal appear for UK guests specifically?</div>
+              <div><span class="node-chip warn">behavior:guest_order_confirmation</span> — behavioral chain seen for logged-in users only. Guest email confirmation flow never traversed.</div>
+            </div>
+          </div>
+        </div>
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-bolt" aria-hidden="true" style="color:#A32D2D"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">Active conflicts in scope</div>
+            <div class="walk-detail">
+              <div style="margin-bottom:6px"><span class="node-chip gap">conflict:shipping_threshold</span> — PRD says £30 free shipping for UK; exploration never tested this. Cannot confirm or deny.</div>
+              <div>No critical-path conflicts found. Auth flow not in scope (guest bypasses login).</div>
+            </div>
+          </div>
+        </div>
+        <div class="walk-row">
+          <div class="walk-icon"><i class="ti ti-check" aria-hidden="true" style="color:#1D9E75"></i></div>
+          <div class="walk-content">
+            <div class="walk-label">High-confidence nodes — candidate for skip</div>
+            <div class="walk-detail"><span class="node-chip ok">/checkout/address</span> conf 96%, <span class="node-chip ok">btn_place_order</span> conf 92%, <span class="node-chip ok">behavior:order_id_generation</span> conf 89%. These were all verified in Mission #402 (2 days ago). Eligible for deduplication.</div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+  {
+    label: 'Hypothesis\ngeneration',
+    content: () => `
+      <div class="hypo-card">
+        <div class="hypo-label">Hypothesis 1</div>
+        <div class="hypo-text">"If user is in the UK region, the currency symbol on all price displays switches from ₹ to £ and VAT is shown as a line item."</div>
+        <div class="hypo-meta">
+          <span class="hypo-pill">Source: behavioral nodes currency:GBP + vat_display</span>
+          <span class="hypo-pill">Confidence: 81%</span>
+          <span class="hypo-pill">Test: assert price format + VAT line on /checkout/review</span>
+        </div>
+      </div>
+      <div class="hypo-card">
+        <div class="hypo-label">Hypothesis 2</div>
+        <div class="hypo-text">"GDPR consent modal appears for UK guest users before email is captured. Dismissing without consent blocks progression."</div>
+        <div class="hypo-meta">
+          <span class="hypo-pill">Source: rule:gdpr_applicability (UK in scope) + guest_gdpr_consent node</span>
+          <span class="hypo-pill">Confidence: 51% — low, priority test</span>
+          <span class="hypo-pill">Test: attempt checkout as UK guest, observe consent gate</span>
+        </div>
+      </div>
+      <div class="hypo-card">
+        <div class="hypo-label">Hypothesis 3 — gap-derived</div>
+        <div class="hypo-text">"UK payment methods likely exclude Amex based on common UK merchant patterns. Klarna or PayPal may appear as alternative to card."</div>
+        <div class="hypo-meta">
+          <span class="hypo-pill">Source: inference from uk_payment_methods gap + general pattern</span>
+          <span class="hypo-pill">Confidence: 35% — exploratory only</span>
+          <span class="hypo-pill">Test: navigate to payment step as UK guest, observe available methods</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    label: 'Plan\nassembly',
+    content: () => `
+      <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:12px;">
+        ${[
+          ['Start from guest checkout deep-link', 'Skip login flow — not in scope. Use stored deep-link to /checkout?mode=guest. Saves ~4 steps verified in Mission #402.', '96%'],
+          ['Set region = UK via session header', 'Inject uk locale before navigation rather than simulating a UK IP. Behavioral nodes confirm this is how region is determined.', '89%'],
+          ['Capture & assert GDPR consent modal', 'Low-confidence node — this is priority 1. Assert modal appears, assert dismissing blocks progression, assert accepting allows it.', '51% → verify'],
+          ['Traverse full checkout, assert GBP + VAT', 'On each page: assert currency symbol is £, assert VAT line item visible on review page. Hypothesis 1 → test.', '81%'],
+          ['Explore UK payment step — new knowledge', 'No prior data. Observe and record all available payment methods. Do not assert — discover. Output: new uk_payment_methods node.', 'Gap → discover'],
+          ['Place order, assert guest confirmation email', 'Assert email sent to captured address. Check subject, sender, order ID format. Behavioral chain not yet verified for guest.', '62% → verify'],
+        ].map((item, i) => `
+          <div class="plan-item">
+            <div class="plan-num">${i+1}</div>
+            <div class="plan-text"><strong>${item[0]}</strong><br>${item[1]}</div>
+            <div class="plan-conf">${item[2]}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="skip-card"><strong>Deduplicated:</strong> Skipping address form validation, place-order button state check, and order ID format — all verified at ≥ 89% confidence in Mission #402 (48 hrs ago, no deploys since). Starting from payment step for those paths.</div>
+    `
+  }
+];
+
+const snav = document.getElementById('snav');
+const panelsEl = document.getElementById('panels');
+let active = 0;
+
+function renderStep(i) {
+  active = i;
+  snav.querySelectorAll('.snav-btn').forEach((b, bi) => b.classList.toggle('active', bi === i));
+  panelsEl.innerHTML = `<div class="panel active">${STEPS[i].content()}</div>`;
+}
+
+STEPS.forEach((s, i) => {
+  const btn = document.createElement('div');
+  btn.className = 'snav-btn' + (i === 0 ? ' active' : '');
+  btn.innerHTML = `<span class="snav-step-num">Step ${i+1}</span>${s.label.replace('\n', '<br>')}`;
+  btn.onclick = () => renderStep(i);
+  snav.appendChild(btn);
+});
+
+renderStep(0);
+</script>

@@ -1,0 +1,390 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.tab-bar { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 20px; }
+.tab { padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.tab.active { color: #0F6E56; border-bottom-color: #0F6E56; font-weight: 500; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.loop-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); margin-bottom: 16px; }
+.loop-badge { font-size: 11px; padding: 3px 10px; border-radius: 99px; border: 0.5px solid; white-space: nowrap; }
+.loop-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.loop-timescale { font-size: 11px; color: var(--color-text-tertiary); }
+
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 1px; background: var(--color-border-secondary); }
+.tl-event { position: relative; margin-bottom: 16px; }
+.tl-dot { position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--color-background-primary); }
+.tl-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 14px; cursor: pointer; }
+.tl-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.tl-session { font-size: 11px; color: var(--color-text-tertiary); font-family: var(--font-mono); }
+.tl-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.tl-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; }
+.tl-updates { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.tl-tag { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); }
+.tl-detail { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--color-border-tertiary); font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; display: none; }
+.tl-detail.open { display: block; }
+.tl-detail strong { color: var(--color-text-primary); font-weight: 500; }
+
+.signal-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.signal-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 16px; }
+.signal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.signal-icon { font-size: 16px; }
+.signal-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.signal-trigger { font-size: 11px; color: var(--color-text-tertiary); }
+.signal-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.signal-desc strong { color: var(--color-text-primary); font-weight: 500; }
+.impact-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.impact-table th { font-size: 11px; color: var(--color-text-tertiary); text-align: left; padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); font-weight: 400; }
+.impact-table td { font-size: 11px; padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); vertical-align: top; }
+.impact-table tr:last-child td { border-bottom: none; }
+.decay-badge { font-size: 11px; padding: 2px 7px; border-radius: 99px; }
+
+.macro-section { display: flex; flex-direction: column; gap: 12px; }
+.macro-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.macro-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 0.5px solid transparent; transition: border-color 0.15s; }
+.macro-header.open { border-bottom-color: var(--color-border-tertiary); }
+.macro-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.macro-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.macro-sub { font-size: 11px; color: var(--color-text-tertiary); }
+.macro-body { padding: 14px 16px; display: none; }
+.macro-body.open { display: block; }
+.transfer-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+.transfer-side { flex: 1; }
+.transfer-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 5px; }
+.transfer-val { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; }
+.transfer-val strong { color: var(--color-text-primary); font-weight: 500; }
+.vs-arrow { display: flex; align-items: center; padding-top: 22px; color: var(--color-text-tertiary); font-size: 16px; }
+.nuance-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.nuance-box strong { color: var(--color-text-primary); font-weight: 500; }
+
+.compound-chart { margin: 4px 0 16px; }
+.cc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cc-label { font-size: 12px; color: var(--color-text-secondary); width: 120px; flex-shrink: 0; }
+.cc-bar-wrap { flex: 1; height: 8px; background: var(--color-border-tertiary); border-radius: 4px; overflow: hidden; }
+.cc-bar { height: 100%; border-radius: 4px; transition: width 0.6s; }
+.cc-val { font-size: 12px; font-weight: 500; color: var(--color-text-primary); min-width: 36px; text-align: right; }
+.cc-legend { display: flex; gap: 16px; margin-top: 4px; }
+.cc-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-tertiary); }
+.cc-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Feedback architecture across sessions — three loops that compound knowledge over time</h2>
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab(0)">Meso loop</div>
+  <div class="tab" onclick="switchTab(1)">Decay & signals</div>
+  <div class="tab" onclick="switchTab(2)">Macro loop</div>
+  <div class="tab" onclick="switchTab(3)">Compounding</div>
+</div>
+
+<div class="panel active" id="tab-0">
+  <div class="loop-header">
+    <span class="loop-badge" style="color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5">Meso loop</span>
+    <span class="loop-title">Knowledge accumulates across sessions on the same application</span>
+    <span class="loop-timescale">Timescale: days → weeks</span>
+  </div>
+
+  <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.6">Each session below shows what it <em>inherited</em> from previous sessions and what it <em>contributed</em> back. Click any session to see the specific knowledge transfer.</div>
+
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<div class="panel" id="tab-1">
+  <div class="loop-header">
+    <span class="loop-badge" style="color:#854F0B;background:#FAEEDA;border-color:#EF9F27">Decay signals</span>
+    <span class="loop-title">External events that trigger confidence drops and re-verification queues</span>
+    <span class="loop-timescale">Timescale: event-driven</span>
+  </div>
+  <div class="signal-grid" id="signals"></div>
+</div>
+
+<div class="panel" id="tab-2">
+  <div class="loop-header">
+    <span class="loop-badge" style="color:#534AB7;background:#EEEDFE;border-color:#AFA9EC">Macro loop</span>
+    <span class="loop-title">Meta-patterns transfer across Intellions — not specific knowledge, but learned strategies</span>
+    <span class="loop-timescale">Timescale: weeks → months</span>
+  </div>
+  <div class="macro-section" id="macro"></div>
+</div>
+
+<div class="panel" id="tab-3">
+  <div class="loop-header">
+    <span class="loop-badge" style="color:#185FA5;background:#E6F1FB;border-color:#85B7EB">Compounding effect</span>
+    <span class="loop-title">How the system gets faster and more accurate over time — not slower</span>
+    <span class="loop-timescale">Measured per Intellion lifecycle</span>
+  </div>
+
+  <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.6">Same application, same Intellion, across 12 weeks. Each metric shows what changes as the knowledge graph matures.</div>
+
+  <div class="compound-chart" id="compound"></div>
+
+  <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px">
+    <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px">What drives each metric</div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="drivers"></div>
+  </div>
+</div>
+</div>
+
+<script>
+const SESSIONS = [
+  {
+    color: '#888780', session: 'M-001', date: 'Week 1, Day 1',
+    title: 'First training run — baseline exploration',
+    desc: 'No prior knowledge. Playwright crawls from root. 43 structural nodes discovered, 28 interaction nodes. Zero behavioral or rule nodes yet.',
+    tags: ['43 structural nodes', '28 interaction nodes', '0 behavioral', 'coverage: 12%'],
+    detail: '<strong>Inherited nothing</strong> — cold start. Every node is new. Confidence on all nodes is at base (60%). The frontier is the entire application. Takes longest per node of any session because there\'s no context to reason from — every page is unknown territory.'
+  },
+  {
+    color: '#5DCAA5', session: 'M-008', date: 'Week 1, Day 5',
+    title: 'Document ingestion — PRD v2 processed',
+    desc: '38 rule nodes written from PRD. 12 directed exploration tasks created. 6 conflicts immediately detected between spec and observed behavior from M-001 to M-007.',
+    tags: ['38 rule nodes', '12 frontier tasks', '6 spec conflicts', 'coverage: 31%'],
+    detail: '<strong>Inherited</strong>: 43 structural + 28 interaction nodes from prior sessions. PRD could be mapped onto existing nodes immediately — "the cart page" in the spec matched the already-discovered /cart structural node. <strong>Contributed</strong>: 6 conflict records that became the highest-priority items in subsequent sessions. The conflicts alone justified the document ingestion — they\'d have taken weeks to find through exploration alone.'
+  },
+  {
+    color: '#1D9E75', session: 'M-019', date: 'Week 2, Day 4',
+    title: 'First regression mission — checkout flow',
+    desc: 'First working mission. Inherited 68% structural coverage. Skipped 8 steps from prior exploration. Found 2 behavioral deviations, 1 confirmed bug (discount rounding).',
+    tags: ['8 steps skipped', '2 deviations', '1 bug confirmed', 'coverage: 68%'],
+    detail: '<strong>Inherited</strong>: 68% structural coverage, full interaction map for checkout, 4 behavioral chains, all 38 rule nodes. <strong>Key inheritance</strong>: the discount rounding conflict (found in M-012 exploration) was elevated to priority assert in this mission\'s plan. The mission didn\'t discover it — it confirmed it, which is what turned a conflict record into a bug report. <strong>Contributed</strong>: confidence boost on 14 behavioral nodes, 2 new edge cases added to the frontier.'
+  },
+  {
+    color: '#0F6E56', session: 'M-041', date: 'Week 4, Day 2',
+    title: 'UK region variant — first regional mission',
+    desc: 'Inherited full baseline knowledge. Region-specific gaps (UK payment methods, GDPR nudge) identified from prior gap nodes. 3 new regional behavioral nodes created.',
+    tags: ['3 regional nodes', 'GDPR confirmed', 'GBP verified', 'coverage: 79%'],
+    detail: '<strong>Inherited</strong>: gap node uk_payment_methods from M-031 (seen in API schema but never explored in UI). The mission plan was generated in 180ms instead of 340ms — the reasoning engine had much richer context. <strong>Key inheritance</strong>: UK-session deep-link stored from prior session, so mission started at /referral/invite directly instead of navigating from root. Setup time: 4 steps vs 11 in M-019. <strong>Contributed</strong>: 3 regional behavioral nodes now available to all future UK-scoped missions.'
+  },
+  {
+    color: '#085041', session: 'M-109', date: 'Week 10, Day 1',
+    title: 'Post-deploy regression — 94% structural coverage',
+    desc: 'Deploy detected. Decay triggered on 31 nodes. Mission auto-generated to re-verify affected areas. 28 of 31 nodes re-confirmed. 3 nodes showed changed behavior — 1 bug, 2 intentional updates.',
+    tags: ['31 nodes decayed', '28 re-confirmed', '1 bug', '2 intentional updates', 'coverage: 94%'],
+    detail: '<strong>Inherited</strong>: 94% structural coverage, 847 nodes total, 203 behavioral chains. Mission plan generated in 90ms. <strong>Key inheritance</strong>: the deploy manifest was compared against the knowledge graph\'s edge map. Only nodes with edges touching changed files were decayed — not all 847. 31 targeted nodes vs a full re-crawl of 847. <strong>The compound effect in action</strong>: this mission took 22 minutes. An equivalent mission in week 1 would have taken 3+ hours and found less. The 2 "intentional updates" were detected as deviations, surfaced for human review, and resolved in minutes — because the knowledge graph had the old behavior to compare against.'
+  },
+];
+
+const SIGNALS = [
+  {
+    icon: 'ti-code', color: '#534AB7', title: 'Frontend deploy detected',
+    trigger: 'CI/CD webhook or file change manifest',
+    desc: 'The most common decay trigger. When a frontend deploy lands, the system compares the changed file manifest against the knowledge graph\'s edge map. <strong>Only nodes with edges to changed files are decayed</strong> — not the whole graph. A CSS change to the header decays structural and visual nodes for header components, not payment flow behavioral nodes.',
+    rows: [
+      ['Structural nodes (changed routes/components)', '95% → 55%', '7 days'],
+      ['Interaction nodes (changed UI elements)', '→ 50%', '5 days'],
+      ['Behavioral nodes (indirectly affected)', '→ 70%', '10 days'],
+      ['Rule nodes', 'No decay — rules don\'t change with deploys', '—'],
+    ]
+  },
+  {
+    icon: 'ti-api', color: '#0F6E56', title: 'API schema change',
+    trigger: 'OpenAPI diff detected on re-ingestion',
+    desc: 'Schema re-ingested on each deploy. Diff computed against previous version. <strong>Changed endpoints decay their linked behavioral nodes</strong> — because a changed API contract means observed behavior may no longer be valid. New endpoints become high-priority frontier tasks.',
+    rows: [
+      ['Behavioral nodes linked to changed endpoint', '→ 55%', '5 days'],
+      ['Interaction nodes that call changed endpoint', '→ 60%', '7 days'],
+      ['New endpoints (no existing node)', 'Gap node created', 'Immediate'],
+      ['Deleted endpoints', 'Node archived, linked nodes flagged', 'Immediate'],
+    ]
+  },
+  {
+    icon: 'ti-file-text', color: '#854F0B', title: 'Document version update',
+    trigger: 'New document uploaded or version tag detected',
+    desc: 'New PRD or spec version processed. Diff against previous extraction. <strong>Changed rules decay their existing rule nodes</strong>. New requirements create directed exploration tasks. Removed requirements flag their nodes for human review — the rule may have been deleted intentionally or the doc may be wrong.',
+    rows: [
+      ['Rule nodes from changed requirements', '→ 65%', '14 days'],
+      ['New requirements (no node)', 'Frontier task + draft node created', 'Immediate'],
+      ['Removed requirements', 'Node flagged for human review', 'Immediate'],
+      ['Unchanged requirements', 'No decay — confidence preserved', '—'],
+    ]
+  },
+  {
+    icon: 'ti-clock', color: '#185FA5', title: 'Time-based decay',
+    trigger: 'Scheduled — runs nightly',
+    desc: '<strong>Every node decays slowly over time</strong> regardless of external events — because applications change continuously, and knowledge confirmed 60 days ago is less reliable than knowledge confirmed yesterday. The decay rate varies by source type and layer.',
+    rows: [
+      ['Exploration-sourced nodes', '−0.5% per day after 7 days', 'Slow'],
+      ['Document-sourced nodes', '−0.3% per day after 14 days', 'Slower'],
+      ['Human-taught nodes', '−0.2% per day after 30 days', 'Slowest'],
+      ['Test-confirmed nodes', '−0.1% per day after 21 days', 'Most durable'],
+    ]
+  },
+];
+
+const MACRO = [
+  {
+    color: '#534AB7', bg: '#EEEDFE', icon: 'ti-transfer',
+    title: 'What transfers vs. what stays local',
+    sub: 'The hard boundary in the macro loop',
+    detail: `
+      <div class="transfer-row">
+        <div class="transfer-side">
+          <div class="transfer-label">Transfers (meta-patterns)</div>
+          <div class="transfer-val">
+            <div style="margin-bottom:6px"><strong>Error format patterns:</strong> "APIs in this org return errors as {code, message, details} — not {error, description}"</div>
+            <div style="margin-bottom:6px"><strong>Auth conventions:</strong> "All protected routes in this org use X-Auth-Token header, not Bearer"</div>
+            <div style="margin-bottom:6px"><strong>Framework fingerprints:</strong> "Forms built with this component library always validate client-side before server-side"</div>
+            <div><strong>Testing heuristics:</strong> "This org's staging env has mail disabled by default — always check MailHog flag before asserting email delivery"</div>
+          </div>
+        </div>
+        <div class="vs-arrow"><i class="ti ti-arrows-right-left" aria-hidden="true"></i></div>
+        <div class="transfer-side">
+          <div class="transfer-label">Stays local (specific knowledge)</div>
+          <div class="transfer-val">
+            <div style="margin-bottom:6px"><strong>Node definitions:</strong> What /checkout/payment contains in App A is irrelevant to App B</div>
+            <div style="margin-bottom:6px"><strong>Behavioral chains:</strong> "Adding to cart increments badge" is App A-specific</div>
+            <div style="margin-bottom:6px"><strong>Business rules:</strong> "Free shipping at ₹500" is App A's rule</div>
+            <div><strong>Confidence scores:</strong> Never transferred — confidence is earned per-application</div>
+          </div>
+        </div>
+      </div>
+      <div class="nuance-box">The meta-pattern layer is essentially an org-level knowledge graph that sits above individual Intellions. It stores conventions, not facts. When a new Intellion is initialized for a new application in the same org, it inherits these conventions as starting hypotheses — which it then verifies or disproves through its own exploration.</div>
+    `
+  },
+  {
+    color: '#0F6E56', bg: '#E1F5EE', icon: 'ti-git-branch',
+    title: 'How patterns are extracted from individual Intellions',
+    sub: 'The abstraction step',
+    detail: `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        ${[
+          ['Observation across Intellions', 'The macro layer monitors writes across all Intellions in an org. When 3+ Intellions independently discover the same structural pattern — e.g. all APIs return pagination as {page, per_page, total} — it becomes a candidate meta-pattern.'],
+          ['Confidence threshold for promotion', 'A candidate becomes a meta-pattern when it appears in ≥ 3 Intellions with confidence ≥ 75% in each. Single-Intellion observations, even high-confidence ones, stay local.'],
+          ['Negative patterns too', 'If 4 Intellions all discover that a particular API convention does NOT hold in this org — e.g. staging does not enforce rate limits — that\'s a negative meta-pattern. "Do not assume rate limiting in staging" is stored and transferred.'],
+          ['Versioned and attributed', 'Every meta-pattern records which Intellions contributed to it and when. If App A\'s Intellion later contradicts a meta-pattern it helped create, the pattern confidence drops and it\'s flagged for review.'],
+        ].map(([title, desc]) => `
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary)">
+            <i class="ti ti-arrow-right" aria-hidden="true" style="color:#1D9E75;font-size:14px;flex-shrink:0;margin-top:1px"></i>
+            <div><div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px">${title}</div><div style="font-size:12px;color:var(--color-text-secondary);line-height:1.55">${desc}</div></div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+  {
+    color: '#185FA5', bg: '#E6F1FB', icon: 'ti-radar',
+    title: 'Cross-Intellion conflict detection',
+    sub: 'When two apps disagree about the same thing',
+    detail: `
+      <div class="nuance-box" style="margin-bottom:12px">
+        A meta-pattern says "all APIs in this org return 422 for validation errors." A new Intellion for App C discovers its API returns 400 for validation errors. This is a cross-Intellion conflict — not a bug in App C, but a divergence from the org pattern. It gets surfaced differently from a within-app conflict.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${[
+          ['🔵 Pattern divergence (likely intentional)', 'App C is a different tech stack. 400 vs 422 may be a conscious choice. Surfaced as "App C diverges from org pattern" — informational, not alarming.'],
+          ['🟡 Possible inconsistency (worth checking)', 'App C shares the same API framework as Apps A and B. 400 vs 422 is probably an oversight. Surfaced as a recommendation to align.'],
+          ['🔴 Org-wide bug candidate', '5 Intellions all discover the same unexpected behavior independently. Not a pattern violation — a systemic issue. Escalated to org-level findings.'],
+        ].map(([type, desc]) => `
+          <div style="display:flex;gap:10px;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary)">
+            <div style="font-size:12px;font-weight:500;white-space:nowrap">${type}</div>
+            <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.55">${desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+];
+
+const COMPOUND = [
+  { label: 'Steps skipped/mission', w1: 5, w12: 42, unit: '%', color: '#0F6E56', driver: 'Each confirmed node is a step future missions can skip. More confirmed nodes = more deduplication. By week 12, ~42% of a typical mission\'s steps are already known with enough confidence to skip.' },
+  { label: 'Plan gen time', w1: 100, w12: 26, unit: '%', color: '#185FA5', invert: true, driver: 'The reasoning engine traverses a richer, denser graph. More edges = faster scope resolution. More confirmed nodes = shorter priority sort. Week 12 plan generation is ~74% faster than week 1.' },
+  { label: 'Bugs found/mission', w1: 100, w12: 185, unit: '%', color: '#993C1D', driver: 'More behavioral and rule nodes means more assertions per mission. Low-confidence nodes get promoted to priority asserts faster. And accumulated conflict records from prior sessions are always in the queue.' },
+  { label: 'False positives', w1: 100, w12: 31, unit: '%', color: '#854F0B', invert: true, driver: 'Early sessions produce many "findings" that are actually knowledge gaps — the Intellion didn\'t know the expected behavior, so deviation looks like a bug. As behavioral nodes fill in, genuine deviations become clearer.' },
+  { label: 'Training time/new feature', w1: 100, w12: 38, unit: '%', color: '#534AB7', invert: true, driver: 'New features in a well-understood app are surrounded by already-known context. The Intellion only needs to learn the new parts — structural map, auth conventions, error formats, navigation patterns are all inherited.' },
+];
+
+const tl = document.getElementById('timeline');
+SESSIONS.forEach((s, i) => {
+  const ev = document.createElement('div');
+  ev.className = 'tl-event';
+  const dot = document.createElement('div');
+  dot.className = 'tl-dot';
+  dot.style.background = s.color;
+  const card = document.createElement('div');
+  card.className = 'tl-card';
+  card.onclick = () => { detail.classList.toggle('open'); };
+  card.innerHTML = `
+    <div class="tl-card-header">
+      <span class="tl-session">${s.session}</span>
+      <span style="font-size:11px;color:var(--color-text-tertiary)">${s.date}</span>
+      <span class="tl-title" style="margin-left:4px">${s.title}</span>
+    </div>
+    <div class="tl-desc">${s.desc}</div>
+    <div class="tl-updates">${s.tags.map(t => `<span class="tl-tag">${t}</span>`).join('')}</div>
+  `;
+  const detail = document.createElement('div');
+  detail.className = 'tl-detail';
+  detail.innerHTML = s.detail;
+  card.appendChild(detail);
+  ev.append(dot, card);
+  tl.appendChild(ev);
+});
+
+const sigContainer = document.getElementById('signals');
+SIGNALS.forEach(s => {
+  const card = document.createElement('div');
+  card.className = 'signal-card';
+  card.innerHTML = `
+    <div class="signal-header">
+      <i class="ti ${s.icon} signal-icon" aria-hidden="true" style="color:${s.color}"></i>
+      <div class="signal-title">${s.title}</div>
+      <div class="signal-trigger">${s.trigger}</div>
+    </div>
+    <div class="signal-desc">${s.desc}</div>
+    <table class="impact-table">
+      <tr><th>Node type</th><th>Confidence drop</th><th>Re-verify window</th></tr>
+      ${s.rows.map(([type, drop, window]) => `<tr><td>${type}</td><td>${drop}</td><td>${window}</td></tr>`).join('')}
+    </table>
+  `;
+  sigContainer.appendChild(card);
+});
+
+const macroContainer = document.getElementById('macro');
+MACRO.forEach((m, i) => {
+  const card = document.createElement('div');
+  card.className = 'macro-card';
+  const header = document.createElement('div');
+  header.className = 'macro-header';
+  header.onclick = () => { header.classList.toggle('open'); body.classList.toggle('open'); };
+  header.innerHTML = `
+    <div class="macro-icon" style="background:${m.bg}"><i class="ti ${m.icon}" aria-hidden="true" style="color:${m.color}"></i></div>
+    <div style="flex:1"><div class="macro-title">${m.title}</div><div class="macro-sub">${m.sub}</div></div>
+    <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--color-text-tertiary);font-size:14px"></i>
+  `;
+  const body = document.createElement('div');
+  body.className = 'macro-body';
+  body.innerHTML = m.detail;
+  card.append(header, body);
+  macroContainer.appendChild(card);
+});
+
+const compoundContainer = document.getElementById('compound');
+const driversContainer = document.getElementById('drivers');
+COMPOUND.forEach(c => {
+  const row = document.createElement('div');
+  row.className = 'cc-row';
+  const pct = c.invert ? (100 - c.w12) : c.w12;
+  row.innerHTML = `
+    <div class="cc-label">${c.label}</div>
+    <div class="cc-bar-wrap"><div class="cc-bar" style="width:${pct}%;background:${c.color}"></div></div>
+    <div class="cc-val">${c.invert ? c.w12+'%' : '+'+c.w12+'%'}</div>
+  `;
+  compoundContainer.appendChild(row);
+
+  const driver = document.createElement('div');
+  driver.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)';
+  driver.innerHTML = `
+    <div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0;margin-top:5px"></div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.55"><strong style="color:var(--color-text-primary);font-weight:500">${c.label}:</strong> ${c.driver}</div>
+  `;
+  driversContainer.appendChild(driver);
+});
+
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t,ti) => t.classList.toggle('active', ti===i));
+  document.querySelectorAll('.panel').forEach((p,pi) => p.classList.toggle('active', pi===i));
+}
+</script>

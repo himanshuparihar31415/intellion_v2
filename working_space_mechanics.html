@@ -1,0 +1,355 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); }
+.tab-bar { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 20px; }
+.tab { padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.tab.active { color: #185FA5; border-bottom-color: #185FA5; font-weight: 500; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.mission-input-box {
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background-primary);
+  padding: 14px 16px; margin-bottom: 16px;
+}
+.mission-prompt { font-size: 14px; color: var(--color-text-primary); margin-bottom: 10px; line-height: 1.5; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 11px; padding: 3px 10px; border-radius: 99px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-secondary); display: flex; align-items: center; gap: 5px; }
+
+.think-steps { display: flex; flex-direction: column; gap: 0; }
+.think-step { display: flex; gap: 0; }
+.think-left { display: flex; flex-direction: column; align-items: center; width: 40px; flex-shrink: 0; }
+.think-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+.think-line { width: 1px; flex: 1; min-height: 8px; background: var(--color-border-secondary); }
+.think-body { flex: 1; padding: 0 0 16px 10px; }
+.think-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); padding-top: 4px; margin-bottom: 5px; }
+.think-detail { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.think-detail strong { color: var(--color-text-primary); font-weight: 500; }
+.node-pull { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.np { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-family: var(--font-mono); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); }
+.np.warn { background: #FAEEDA; border-color: #EF9F27; color: #633806; }
+.np.gap { background: #FCEBEB; border-color: #F09595; color: #791F1F; }
+.np.ok { background: #EAF3DE; border-color: #97C459; color: #27500A; }
+.plan-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.plan-table th { font-size: 11px; color: var(--color-text-tertiary); text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); font-weight: 400; }
+.plan-table td { font-size: 12px; padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); vertical-align: top; line-height: 1.5; }
+.plan-table td:first-child { color: var(--color-text-primary); font-weight: 500; white-space: nowrap; }
+.plan-table tr:last-child td { border-bottom: none; }
+.skip-badge { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-tertiary); }
+.mode-badge { font-size: 11px; padding: 2px 7px; border-radius: 99px; }
+
+.skill-section { display: flex; flex-direction: column; gap: 12px; }
+.skill-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); background: var(--color-background-primary); overflow: hidden; }
+.skill-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 0.5px solid transparent; transition: border-color 0.15s; }
+.skill-header.open { border-bottom-color: var(--color-border-tertiary); }
+.skill-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.skill-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.skill-role { font-size: 11px; color: var(--color-text-tertiary); }
+.skill-body { padding: 14px 16px; display: none; }
+.skill-body.open { display: block; }
+.contract-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.contract-side { flex: 1; }
+.contract-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 5px; }
+.contract-val { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; font-family: var(--font-mono); }
+.skill-nuance { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+.skill-nuance strong { color: var(--color-text-primary); font-weight: 500; }
+
+.findings-section { display: flex; flex-direction: column; gap: 12px; }
+.finding-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); background: var(--color-background-primary); overflow: hidden; }
+.finding-header { padding: 12px 16px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.finding-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.finding-type { font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.finding-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; line-height: 1.4; }
+.finding-body { padding: 0 16px 14px; display: none; border-top: 0.5px solid var(--color-border-tertiary); }
+.finding-body.open { display: block; }
+.finding-row { display: flex; gap: 8px; margin-top: 10px; align-items: flex-start; }
+.finding-row-label { font-size: 11px; color: var(--color-text-tertiary); min-width: 80px; padding-top: 1px; }
+.finding-row-val { font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; flex: 1; }
+.finding-row-val strong { color: var(--color-text-primary); font-weight: 500; }
+.finding-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.faction { font-size: 12px; padding: 6px 12px; border-radius: var(--border-radius-md); cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.15s; }
+.faction:hover { background: var(--color-background-primary); }
+.faction.primary { background: #E6F1FB; color: #185FA5; border-color: #85B7EB; }
+.sync-footer { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); background: var(--color-background-primary); padding: 14px 16px; }
+.sync-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 10px; }
+.sync-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.sync-stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 14px; font-size: 12px; color: var(--color-text-secondary); }
+.sync-stat strong { color: var(--color-text-primary); font-weight: 500; display: block; font-size: 18px; }
+.sync-btn { display: block; width: 100%; padding: 10px; text-align: center; font-size: 13px; font-weight: 500; background: #185FA5; color: #E6F1FB; border-radius: var(--border-radius-md); cursor: pointer; border: none; }
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Working space mechanics — mission input, skill delegation, and findings output</h2>
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab(0)">Mission planning</div>
+  <div class="tab" onclick="switchTab(1)">Skill delegation</div>
+  <div class="tab" onclick="switchTab(2)">Findings & sync</div>
+</div>
+
+<div class="panel active" id="tab-0">
+  <div class="mission-input-box">
+    <div class="mission-prompt">"Validate the referral flow for existing premium users in the UK region"</div>
+    <div class="chips">
+      <span class="chip"><i class="ti ti-server" aria-hidden="true" style="font-size:12px"></i>Env: staging</span>
+      <span class="chip"><i class="ti ti-tool" aria-hidden="true" style="font-size:12px"></i>Skillset: full (UI + API)</span>
+      <span class="chip"><i class="ti ti-flag" aria-hidden="true" style="font-size:12px"></i>Priority: high</span>
+      <span class="chip"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px"></i>Session: #M-509</span>
+    </div>
+  </div>
+
+  <div class="think-steps" id="think-steps"></div>
+</div>
+
+<div class="panel" id="tab-1">
+  <div class="skill-section" id="skills"></div>
+</div>
+
+<div class="panel" id="tab-2">
+  <div class="findings-section" id="findings"></div>
+</div>
+</div>
+
+<script>
+const THINK = [
+  {
+    color: '#534AB7', bg: '#EEEDFE', num: '1',
+    title: 'Entity extraction + graph scope pull',
+    detail: 'Parse task → entities: <strong>referral flow</strong>, <strong>premium user</strong>, <strong>UK region</strong>. Pull all nodes tagged with these. Scope assembled in 340ms.',
+    nodes: [
+      {label:'/referral/dashboard',cls:'ok'},{label:'/referral/invite',cls:'ok'},
+      {label:'api:POST /v1/invite',cls:'ok'},{label:'behavior:referral_code_gen',cls:'ok'},
+      {label:'rule:premium_required',cls:'ok'},{label:'behavior:uk_currency',cls:'ok'},
+      {label:'behavior:uk_gdpr_nudge',cls:'warn'},{label:'email:referral_invite',cls:'warn'},
+      {label:'behavior:duplicate_invite',cls:'gap'},
+    ]
+  },
+  {
+    color: '#0F6E56', bg: '#E1F5EE', num: '2',
+    title: 'Confidence audit — what do we actually know?',
+    detail: 'Every pulled node checked. Low-confidence and gap nodes flagged. These become the <strong>priority assertions</strong> — the things most likely to surface something real.',
+    extra: `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px;text-align:center">
+        <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">6</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary)">conf ≥ 80% — confirm</div>
+      </div>
+      <div style="background:#FAEEDA;border-radius:var(--border-radius-md);padding:8px 10px;text-align:center">
+        <div style="font-size:18px;font-weight:500;color:#633806">2</div>
+        <div style="font-size:11px;color:#854F0B">conf 50–79% — priority test</div>
+      </div>
+      <div style="background:#FCEBEB;border-radius:var(--border-radius-md);padding:8px 10px;text-align:center">
+        <div style="font-size:18px;font-weight:500;color:#A32D2D">1</div>
+        <div style="font-size:11px;color:#A32D2D">gap — discover</div>
+      </div>
+    </div>`
+  },
+  {
+    color: '#185FA5', bg: '#E6F1FB', num: '3',
+    title: 'Deduplication — what can we skip?',
+    detail: 'Check mission history. Any step already verified at ≥ 85% confidence with no deploy since → eligible to skip. This session skips 3 steps from Mission #M-501 (4 days ago, no relevant deploys).',
+    extra: `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+      ${[
+        ['Login as premium user','Verified M-501, conf 94%'],
+        ['Navigate to /referral/dashboard','Verified M-501, conf 91%'],
+        ['Assert referral code format (8 chars, alphanumeric)','Verified M-501, conf 89%'],
+      ].map(([step, why]) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)">
+        <i class="ti ti-circle-check" aria-hidden="true" style="color:#1D9E75;font-size:14px;flex-shrink:0"></i>
+        <div style="flex:1;font-size:12px;color:var(--color-text-secondary)">${step}</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary)">${why}</div>
+      </div>`).join('')}
+    </div>`
+  },
+  {
+    color: '#854F0B', bg: '#FAEEDA', num: '4',
+    title: 'Execution plan assembly',
+    detail: 'Steps ordered by: critical-path first, gap/low-confidence early (fail fast), deduped steps removed. Final plan handed to skill delegation layer.',
+    extra: `<table class="plan-table" style="margin-top:8px">
+      <tr><th>#</th><th>Step</th><th>Skill</th><th>Mode</th></tr>
+      ${[
+        ['1','Deep-link to /referral/invite as UK premium user','UI','<span class="mode-badge" style="background:#E6F1FB;color:#185FA5;border:0.5px solid #85B7EB">setup</span>'],
+        ['2','Assert GDPR nudge appears for UK user','UI + API','<span class="mode-badge" style="background:#FAEEDA;color:#633806;border:0.5px solid #EF9F27">priority assert</span>'],
+        ['3','Submit invite — assert POST /v1/invite fires + 201 response','API','<span class="mode-badge" style="background:#EAF3DE;color:#27500A;border:0.5px solid #97C459">assert</span>'],
+        ['4','Assert invite email triggered in MailHog','UI','<span class="mode-badge" style="background:#FAEEDA;color:#633806;border:0.5px solid #EF9F27">priority assert</span>'],
+        ['5','Submit invite twice rapidly — observe duplicate handling','UI','<span class="mode-badge" style="background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595">discover</span>'],
+        ['6','Assert currency symbol = £ on reward display','UI','<span class="mode-badge" style="background:#EAF3DE;color:#27500A;border:0.5px solid #97C459">assert</span>'],
+      ].map(([n,step,skill,mode]) => `<tr><td>${n}</td><td>${step}</td><td><span class="skip-badge">${skill}</span></td><td>${mode}</td></tr>`).join('')}
+    </table>`
+  },
+];
+
+const SKILLS = [
+  {
+    color: '#534AB7', bg: '#EEEDFE', icon: 'ti-click',
+    name: 'UI skill — Playwright executor',
+    role: 'Hands. Executes, never interprets.',
+    input: 'action_type: "click" | "fill" | "navigate" | "wait"\ntarget: CSS selector or semantic label\nexpected_state: optional pre-condition check\npage_context: current URL + session',
+    output: 'dom_delta: {changed, added, removed}\nnetwork_events: [{method, url, status, body}]\nvisual_snapshot: before/after\nexecution_time_ms: 340\nerror: null | {type, message, selector}',
+    nuance: '<strong>The UI skill does not decide what to click.</strong> The Intellion tells it exactly what to do and what to expect. The skill\'s job is to do it reliably and return everything that happened — not to judge whether the outcome is correct. Judgment stays with the Intellion.<br><br>When a step fails (element not found, timeout, unexpected state), the skill returns a structured error — not a test failure. The Intellion decides whether it\'s a bug, a knowledge gap, or a setup issue.'
+  },
+  {
+    color: '#0F6E56', bg: '#E1F5EE', icon: 'ti-api',
+    name: 'API skill — HTTP executor',
+    role: 'Direct backend calls. Bypasses UI entirely.',
+    input: 'method: POST\nurl: /api/v1/invite\nheaders: {Authorization, Content-Type, X-Region: UK}\nbody: {recipient_email, referral_code}\nassertions: [{field: "status", eq: 201}, {field: "body.invite_id", exists: true}]',
+    output: 'response: {status: 201, headers: {...}, body: {invite_id: "inv_9921", queued: true}}\nlatency_ms: 187\nassertions_passed: [{status: 201 ✓}, {invite_id exists ✓}]\nassertions_failed: []\nraw_request_log: [curl equivalent]',
+    nuance: '<strong>The API skill runs in parallel with the UI skill</strong> when both are in scope. While Playwright is driving the browser through the invite form, the API skill is independently monitoring the network layer — capturing every request, validating response shapes against the OpenAPI schema, and checking latency against any SLA rules in the knowledge graph.<br><br>This dual-channel approach catches a class of bugs invisible to UI-only testing: the button appears to succeed but the API returned a 202 (accepted, not processed) instead of 201, or the response body is missing a field the frontend silently swallowed.'
+  },
+  {
+    color: '#185FA5', bg: '#E6F1FB', icon: 'ti-eye',
+    name: 'Visual skill — screenshot comparator',
+    role: 'Pixel-level and layout regression.',
+    input: 'current_screenshot: base64\nbaseline_node_id: "referral_dashboard_uk_state"\ncomparison_mode: "layout" | "pixel" | "element_presence"\ntolerance_px: 4',
+    output: 'diff_score: 0.03  (3% change)\ndiff_regions: [{x:120, y:340, w:80, h:24, type:"text_change"}]\nbaseline_age_days: 6\nelements_missing: []\nelements_added: ["#uk-vat-note"]\nverdict: "changed — review required"',
+    nuance: '<strong>Visual skill runs last, after functional assertions pass.</strong> There\'s no point checking pixel layout if the feature is broken. When it runs, it compares against a stored baseline from the knowledge graph — not a fixed image file, but a snapshot tied to a specific structural node and region combination.<br><br>The "elements_added" output is particularly useful: it catches new UI elements that no other skill would notice. A new "#uk-vat-note" element appearing means either a feature shipped, a bug introduced, or a spec requirement was just implemented — all worth surfacing.'
+  },
+  {
+    color: '#854F0B', bg: '#FAEEDA', icon: 'ti-mail',
+    name: 'MailHog skill — side-effect observer',
+    role: 'Catches async events the UI can\'t see.',
+    input: 'wait_timeout_ms: 5000\nexpected_recipient: "test-uk-user@staging.intelliqa.io"\nexpected_subject_contains: "referral"\nassert_fields: ["from", "subject", "html_body_contains:referral_code"]',
+    output: 'email_received: true\nreceived_at_ms: 2840  (within timeout)\nfrom: "no-reply@acme.com"\nsubject: "You\'ve been invited to join Acme!"\nreferral_code_in_body: true\nhtml_valid: true\nplaintext_fallback: true',
+    nuance: '<strong>Side-effect skills are what separate integration testing from UI testing.</strong> The UI says "Invite sent!" — but did an email actually go out? MailHog captures all outbound SMTP in staging. The skill polls it after the UI action, within a configurable timeout.<br><br>A finding like "UI showed success toast but no email in MailHog within 5s" is a behavioral contradiction — the knowledge graph says an SMTP event should follow this UI action, and it didn\'t. That\'s not a timeout fluke; that\'s a bug with a clear evidence chain.'
+  },
+];
+
+const FINDINGS = [
+  {
+    icon: '✅', type: 'Confirmed', typeColor: '#27500A', typeBg: '#EAF3DE', typeBorder: '#97C459',
+    title: 'Referral code generated and stored — matches behavioral layer',
+    obs: 'POST /v1/invite returned 201 with invite_id: "inv_9921". Code appeared in DB within 800ms. UI badge updated.',
+    reasoning: 'Matches behavior:referral_code_gen node exactly. confidence updated: 82% → 91%. No deviation.',
+    graphUpdate: 'behavior:referral_code_gen confidence +9%. Last-verified timestamp updated.',
+    actions: ['View evidence', 'View node']
+  },
+  {
+    icon: '⚠️', type: 'Logic deviation', typeColor: '#633806', typeBg: '#FAEEDA', typeBorder: '#EF9F27',
+    title: 'UI showed "Invite sent!" but no email arrived in MailHog within 5s',
+    obs: 'Playwright confirmed toast appeared at t=1.2s. MailHog polled at t=1.5s, 3s, 5s — no email received. API returned 202 (accepted, not sent) not 201.',
+    reasoning: 'Behavioral node email:referral_invite expects SMTP event to follow successful invite. API returned 202 not 201 — suggests email queued but not processed. Queue worker may be down in staging, or 202 is new behavior not in the spec.',
+    graphUpdate: 'Conflict record created: behavior:referral_invite_email. confidence dropped 78% → 52%. Queued for re-test.',
+    actions: ['Flag as bug ↗', 'Update knowledge graph', 'Re-test with delay', 'Check queue worker']
+  },
+  {
+    icon: '💡', type: 'Discovery', typeColor: '#0C447C', typeBg: '#E6F1FB', typeBorder: '#85B7EB',
+    title: 'Double-submit triggers duplicate invite record — no deduplication guard',
+    obs: 'Clicked "Send Invite" twice within 300ms. Two POST /v1/invite requests fired. Both returned 201. DB shows two rows with same recipient_email + referral_code.',
+    reasoning: 'No existing node for behavior:duplicate_invite_guard — this was a gap node. Gap is now confirmed: the endpoint has no idempotency key and no deduplication logic. The UI does not disable the button after first click.',
+    graphUpdate: 'New node created: behavior:duplicate_invite_vulnerability. Layer: behavioral. Confidence: 88% (observed and API-confirmed). Rule candidate queued for human review: "should invite endpoint be idempotent?"',
+    actions: ['File bug ↗', 'Add to knowledge graph', 'Flag for human review']
+  },
+  {
+    icon: '✅', type: 'Confirmed', typeColor: '#27500A', typeBg: '#EAF3DE', typeBorder: '#97C459',
+    title: 'GDPR nudge appears for UK premium users — hypothesis confirmed',
+    obs: 'Consent banner appeared at /referral/invite before invite form rendered. Dismissing without consent disabled the "Send" button. Accepting enabled it.',
+    reasoning: 'This was a priority assert — behavior:uk_gdpr_nudge had confidence 51% from a single prior observation. Now confirmed with full interaction chain: appear → block → accept → unblock. Hypothesis 2 from scoping validated.',
+    graphUpdate: 'behavior:uk_gdpr_nudge confidence: 51% → 87%. Edge added: gdpr_nudge → blocks → btn_send_invite. Edge added: gdpr_consent_given → enables → btn_send_invite.',
+    actions: ['View evidence', 'View node']
+  },
+];
+
+const thinkContainer = document.getElementById('think-steps');
+THINK.forEach((s, i) => {
+  const step = document.createElement('div');
+  step.className = 'think-step';
+
+  const left = document.createElement('div');
+  left.className = 'think-left';
+  const dot = document.createElement('div');
+  dot.className = 'think-dot';
+  dot.style.cssText = `background:${s.bg};color:${s.color};border:0.5px solid ${s.color}40`;
+  dot.textContent = s.num;
+  left.appendChild(dot);
+  if (i < THINK.length - 1) {
+    const line = document.createElement('div');
+    line.className = 'think-line';
+    left.appendChild(line);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'think-body';
+  body.innerHTML = `<div class="think-title">${s.title}</div><div class="think-detail">${s.detail}</div>`;
+
+  if (s.nodes) {
+    const np = document.createElement('div');
+    np.className = 'node-pull';
+    s.nodes.forEach(n => { np.innerHTML += `<span class="np ${n.cls}">${n.label}</span>`; });
+    body.appendChild(np);
+  }
+  if (s.extra) {
+    const ex = document.createElement('div');
+    ex.innerHTML = s.extra;
+    body.appendChild(ex);
+  }
+
+  step.append(left, body);
+  thinkContainer.appendChild(step);
+});
+
+const skillContainer = document.getElementById('skills');
+SKILLS.forEach((sk, i) => {
+  const card = document.createElement('div');
+  card.className = 'skill-card';
+  const header = document.createElement('div');
+  header.className = 'skill-header';
+  header.onclick = () => { header.classList.toggle('open'); body.classList.toggle('open'); };
+  header.innerHTML = `
+    <div class="skill-icon" style="background:${sk.bg}"><i class="ti ${sk.icon}" aria-hidden="true" style="color:${sk.color}"></i></div>
+    <div style="flex:1"><div class="skill-name">${sk.name}</div><div class="skill-role">${sk.role}</div></div>
+    <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--color-text-tertiary);font-size:14px"></i>
+  `;
+  const body = document.createElement('div');
+  body.className = 'skill-body';
+  body.innerHTML = `
+    <div class="contract-row">
+      <div class="contract-side"><div class="contract-label">Intellion sends (input contract)</div><div class="contract-val">${sk.input}</div></div>
+      <div class="contract-side"><div class="contract-label">Skill returns (output contract)</div><div class="contract-val">${sk.output}</div></div>
+    </div>
+    <div class="skill-nuance">${sk.nuance}</div>
+  `;
+  card.append(header, body);
+  skillContainer.appendChild(card);
+});
+
+const findingsContainer = document.getElementById('findings');
+FINDINGS.forEach(f => {
+  const card = document.createElement('div');
+  card.className = 'finding-card';
+  const header = document.createElement('div');
+  header.className = 'finding-header';
+  header.onclick = () => { body.classList.toggle('open'); };
+  header.innerHTML = `
+    <div class="finding-icon">${f.icon}</div>
+    <span class="finding-type" style="color:${f.typeColor};background:${f.typeBg};border-color:${f.typeBorder}">${f.type}</span>
+    <div class="finding-title">${f.title}</div>
+  `;
+  const body = document.createElement('div');
+  body.className = 'finding-body';
+  body.innerHTML = `
+    <div class="finding-row"><div class="finding-row-label">Observed</div><div class="finding-row-val">${f.obs}</div></div>
+    <div class="finding-row"><div class="finding-row-label">Reasoning</div><div class="finding-row-val">${f.reasoning}</div></div>
+    <div class="finding-row"><div class="finding-row-label">Graph update</div><div class="finding-row-val">${f.graphUpdate}</div></div>
+    <div class="finding-actions">${f.actions.map((a,i) => `<button class="faction${i===0?' primary':''}">${a}</button>`).join('')}</div>
+  `;
+  card.append(header, body);
+  findingsContainer.appendChild(card);
+});
+
+findingsContainer.insertAdjacentHTML('beforeend', `
+  <div class="sync-footer">
+    <div class="sync-title">Close the loop — sync back to knowledge core</div>
+    <div class="sync-row">
+      <div class="sync-stat"><strong>4</strong> behaviors confirmed</div>
+      <div class="sync-stat"><strong>1</strong> conflict created</div>
+      <div class="sync-stat"><strong>1</strong> new node discovered</div>
+      <div class="sync-stat"><strong>3</strong> confidence scores updated</div>
+    </div>
+    <button class="sync-btn">Synchronize & finish mission #M-509</button>
+  </div>
+`);
+
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t,ti) => t.classList.toggle('active', ti===i));
+  document.querySelectorAll('.panel').forEach((p,pi) => p.classList.toggle('active', pi===i));
+}
+</script>
